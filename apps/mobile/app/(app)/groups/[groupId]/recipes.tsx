@@ -57,7 +57,7 @@ export default function RecipesScreen() {
               {item.missingIngredients.length > 0 ? (
                 <Text className="text-xs text-amber-700 mt-2">
                   ⚠ {t('recipes.missingIngredients', { count: item.missingIngredients.length })} :{' '}
-                  {item.missingIngredients.map((i) => i.name).join(', ')}
+                  {item.missingIngredients.map((i: { name: string }) => i.name).join(', ')}
                 </Text>
               ) : null}
             </View>

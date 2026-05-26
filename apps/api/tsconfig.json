@@ -5,9 +5,7 @@
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "types": ["node"],
-    "composite": true
+    "types": ["node"]
   },
-  "include": ["src/**/*", "prisma/seed.ts"],
-  "references": [{ "path": "../../packages/shared" }]
+  "include": ["src/**/*", "prisma/seed.ts"]
 }
