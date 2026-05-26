@@ -2,10 +2,14 @@
 
 ## 📌 État actuel
 
-- **Version** : 0.1.0 (scaffold)
-- **Branche active** : dev (à créer au 1er commit)
-- **Dernier commit** : (à venir)
-- **Prochaine étape** : configurer un projet Supabase, brancher `.env`, lancer `prisma migrate dev`, démarrer l'API + le mobile, valider le E2E.
+- **Version** : 0.1.0 (scaffold complet, typecheck vert)
+- **Branche active** : dev
+- **Dernier commit** : `fix: add fastify-plugin dep, drop tsconfig composite refs, type recipe ingredient mapping`
+- **Prochaine étape** :
+  1. Steve lance `gh auth login` puis `.\scripts\push-to-github.ps1` pour pousser le repo.
+  2. Créer un projet Supabase (https://supabase.com) → copier URL + clés dans `.env`.
+  3. `pnpm prisma:migrate` pour créer les tables.
+  4. `pnpm dev:api` + `pnpm dev:mobile` (autre terminal) → tester E2E.
 
 ---
 
@@ -36,9 +40,14 @@
   - `tech-bricks/react-native/ads` v0.1.0 : API publique gelée (AdBanner, showInterstitial, showRewardedAd), implémentation stub (AdMob branché en v0.2).
 
 ### En cours
-- [ ] Premier `pnpm install` + premier commit + push GitHub.
+- [x] Premier `pnpm install` (1m07s, 1251 packages, OK).
+- [x] Premier commit local sur `main` + branches `commit` et `dev` créées.
+- [x] Typecheck API : 0 erreur. Typecheck mobile : 0 erreur. Prisma generate : OK.
+- [x] Script `scripts/push-to-github.ps1` prêt pour la création du repo GitHub.
+- [ ] Push GitHub (attend `gh auth login` côté Steve).
 - [ ] Création du projet Supabase + récupération des clés.
 - [ ] Première migration Prisma sur la DB Supabase.
+- [ ] Lancement local + test E2E (signup → groupe → courses → frigo → matching recette).
 
 ### Bloqueurs / Décisions à prendre
 - **gh CLI auth** : Steve doit lancer `gh auth login` (interactif) pour qu'on puisse créer le repo et push les 3 branches.
