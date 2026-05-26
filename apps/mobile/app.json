@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "homeshared",
+    "slug": "homeshared",
+    "version": "0.1.0",
+    "scheme": "homeshared",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#0f172a",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "com.steve.homeshared",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "name": "homeshared",
+      "shortName": "homeshared",
+      "description": "Hub partagé pour foyers : courses, frigo, recettes.",
+      "themeColor": "#0f172a",
+      "backgroundColor": "#0f172a",
+      "display": "standalone",
+      "orientation": "portrait"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": ["expo-router"]
+  }
+}

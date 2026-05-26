@@ -1,0 +1,28 @@
+{
+  "name": "homeshared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hub partagé pour foyers : courses, frigo, recettes, tâches",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev:api": "pnpm --filter @homeshared/api dev",
+    "dev:mobile": "pnpm --filter @homeshared/mobile start",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "typecheck": "pnpm -r typecheck",
+    "prisma:generate": "pnpm --filter @homeshared/api prisma:generate",
+    "prisma:migrate": "pnpm --filter @homeshared/api prisma:migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.9"
+}

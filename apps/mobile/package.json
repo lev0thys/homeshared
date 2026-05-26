@@ -1,0 +1,51 @@
+{
+  "name": "@homeshared/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"**/*.{ts,tsx}\" --ignore-pattern node_modules",
+    "test": "echo \"no tests yet\" && exit 0",
+    "build": "echo \"use 'pnpm build:web' or eas build for android\" && exit 0"
+  },
+  "dependencies": {
+    "@homeshared/shared": "workspace:*",
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "@supabase/supabase-js": "^2.46.1",
+    "@tanstack/react-query": "^5.59.16",
+    "expo": "~51.0.0",
+    "expo-constants": "~16.0.2",
+    "expo-image": "~1.13.0",
+    "expo-linking": "~6.3.1",
+    "expo-router": "~3.5.23",
+    "expo-status-bar": "~1.12.1",
+    "expo-system-ui": "~3.0.7",
+    "i18next": "^23.16.4",
+    "nativewind": "^4.1.20",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-i18next": "^15.1.0",
+    "react-native": "0.74.5",
+    "react-native-gesture-handler": "~2.16.1",
+    "react-native-reanimated": "~3.10.1",
+    "react-native-safe-area-context": "4.10.5",
+    "react-native-screens": "3.31.1",
+    "react-native-svg": "15.2.0",
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-web": "~0.19.10",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~18.2.79",
+    "@types/react-native": "~0.73.0",
+    "eslint": "^9.13.0",
+    "tailwindcss": "^3.4.14",
+    "typescript": "~5.3.3"
+  }
+}

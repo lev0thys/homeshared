@@ -1,0 +1,69 @@
+{
+  "app": {
+    "name": "homeshared",
+    "tagline": "Le hub partagé de votre foyer"
+  },
+  "common": {
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "error": "Une erreur est survenue."
+  },
+  "auth": {
+    "loginTitle": "Connexion",
+    "signupTitle": "Créer un compte",
+    "email": "Email",
+    "password": "Mot de passe",
+    "username": "Pseudo",
+    "displayName": "Nom affiché",
+    "loginButton": "Se connecter",
+    "signupButton": "Créer mon compte",
+    "googleSignin": "Continuer avec Google",
+    "switchToSignup": "Pas encore de compte ? Inscrivez-vous",
+    "switchToLogin": "Déjà un compte ? Connectez-vous",
+    "logout": "Se déconnecter"
+  },
+  "groups": {
+    "title": "Mes groupes",
+    "empty": "Aucun groupe pour l'instant. Crée-en un pour partager une liste de courses, un frigo ou des recettes !",
+    "newGroup": "Nouveau groupe",
+    "groupName": "Nom du groupe",
+    "groupDescription": "Description (optionnelle)",
+    "create": "Créer le groupe",
+    "invite": "Inviter des membres",
+    "members": "Membres"
+  },
+  "shopping": {
+    "title": "Liste de courses",
+    "empty": "La liste est vide. Ajoutez le premier article !",
+    "addItem": "Ajouter un article",
+    "itemName": "Nom de l'article",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "addedBy": "Ajouté par {{name}}",
+    "purchased": "Acheté",
+    "markPurchased": "Cocher (mis dans le caddie)",
+    "uncheck": "Décocher"
+  },
+  "fridge": {
+    "title": "Frigo",
+    "empty": "Le frigo est vide. Passez à la caisse pour le remplir, ou ajoutez manuellement.",
+    "addItem": "Ajouter au frigo",
+    "consume": "Utiliser",
+    "expiresOn": "Expire le {{date}}"
+  },
+  "recipes": {
+    "title": "Recettes",
+    "matchTitle": "Que cuisiner avec mon frigo ?",
+    "matchEmpty": "Aucune recette trouvée avec votre frigo actuel. Essayez d'augmenter la tolérance ou ajoutez des ingrédients.",
+    "missingIngredients": "{{count}} ingrédient manquant",
+    "missingIngredients_plural": "{{count}} ingrédients manquants",
+    "prepTime": "{{minutes}} min de préparation",
+    "cookTime": "{{minutes}} min de cuisson",
+    "servings": "{{count}} portion",
+    "servings_plural": "{{count}} portions"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "app": {
+    "name": "homeshared",
+    "tagline": "Your household's shared hub"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "error": "Something went wrong."
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "signupTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "username": "Username",
+    "displayName": "Display name",
+    "loginButton": "Log in",
+    "signupButton": "Sign up",
+    "googleSignin": "Continue with Google",
+    "switchToSignup": "No account yet? Sign up",
+    "switchToLogin": "Already have an account? Log in",
+    "logout": "Log out"
+  },
+  "groups": {
+    "title": "My groups",
+    "empty": "No group yet. Create one to share a shopping list, fridge or recipes!",
+    "newGroup": "New group",
+    "groupName": "Group name",
+    "groupDescription": "Description (optional)",
+    "create": "Create group",
+    "invite": "Invite members",
+    "members": "Members"
+  },
+  "shopping": {
+    "title": "Shopping list",
+    "empty": "The list is empty. Add your first item!",
+    "addItem": "Add item",
+    "itemName": "Item name",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "addedBy": "Added by {{name}}",
+    "purchased": "Purchased",
+    "markPurchased": "Check (in cart)",
+    "uncheck": "Uncheck"
+  },
+  "fridge": {
+    "title": "Fridge",
+    "empty": "Fridge is empty. Check items off the shopping list or add manually.",
+    "addItem": "Add to fridge",
+    "consume": "Use",
+    "expiresOn": "Expires on {{date}}"
+  },
+  "recipes": {
+    "title": "Recipes",
+    "matchTitle": "What can I cook with my fridge?",
+    "matchEmpty": "No recipe matches your current fridge. Try increasing tolerance or add ingredients.",
+    "missingIngredients": "{{count}} missing ingredient",
+    "missingIngredients_plural": "{{count}} missing ingredients",
+    "prepTime": "{{minutes}} min prep",
+    "cookTime": "{{minutes}} min cook",
+    "servings": "{{count}} serving",
+    "servings_plural": "{{count}} servings"
+  }
+}

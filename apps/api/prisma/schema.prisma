@@ -1,0 +1,152 @@
+// schema.prisma — modèle de données homeshared
+//
+// Conception :
+//   - Un utilisateur (User) peut appartenir à plusieurs groupes via Membership.
+//   - Un groupe (Group) possède UNE liste de courses (cardinality 1:1 implicite —
+//     les items sont rattachés directement au groupe, pas à un "ShoppingList"
+//     intermédiaire) et UN frigo (FridgeItem rattaché au groupe).
+//   - Les recettes sont globales (catalogue partagé entre tous les groupes) et
+//     leur matching avec le frigo se fait en service applicatif.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  email       String   @unique
+  username    String   @unique
+  displayName String
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships     Membership[]
+  ownedGroups     Group[]        @relation("GroupOwner")
+  addedItems      ShoppingItem[] @relation("ShoppingItemAddedBy")
+  purchasedItems  ShoppingItem[] @relation("ShoppingItemPurchasedBy")
+  createdInvites  Invite[]
+}
+
+model Group {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  ownerId     String   @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner         User           @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  memberships   Membership[]
+  shoppingItems ShoppingItem[]
+  fridgeItems   FridgeItem[]
+  invites       Invite[]
+
+  @@index([ownerId])
+}
+
+model Membership {
+  id       String    @id @default(uuid()) @db.Uuid
+  groupId  String    @db.Uuid
+  userId   String    @db.Uuid
+  role     GroupRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+}
+
+model Invite {
+  id        String   @id @default(uuid()) @db.Uuid
+  groupId   String   @db.Uuid
+  createdBy String   @db.Uuid
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  usedBy    String?  @db.Uuid
+  createdAt DateTime @default(now())
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  creator User  @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([token])
+}
+
+model ShoppingItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  groupId     String    @db.Uuid
+  name        String
+  quantity    Decimal   @default(1) @db.Decimal(10, 2)
+  unit        String?
+  notes       String?
+  addedById   String    @db.Uuid
+  addedAt     DateTime  @default(now())
+  purchasedAt DateTime?
+  purchasedById String? @db.Uuid
+
+  group       Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  addedBy     User  @relation("ShoppingItemAddedBy", fields: [addedById], references: [id], onDelete: Restrict)
+  purchasedBy User? @relation("ShoppingItemPurchasedBy", fields: [purchasedById], references: [id], onDelete: SetNull)
+
+  @@index([groupId, purchasedAt])
+}
+
+model FridgeItem {
+  id        String    @id @default(uuid()) @db.Uuid
+  groupId   String    @db.Uuid
+  name      String
+  quantity  Decimal   @default(1) @db.Decimal(10, 2)
+  unit      String?
+  addedAt   DateTime  @default(now())
+  expiresAt DateTime?
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Une même denrée peut exister en plusieurs lots (dates d'achat / péremption
+  // différentes), donc pas d'unique sur (groupId, name).
+  @@index([groupId, name])
+  @@index([groupId, expiresAt])
+}
+
+model Recipe {
+  id           String   @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  instructions String   @db.Text
+  prepMinutes  Int      @default(0)
+  cookMinutes  Int      @default(0)
+  servings     Int      @default(2)
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+
+  ingredients RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  id       String  @id @default(uuid()) @db.Uuid
+  recipeId String  @db.Uuid
+  name     String
+  quantity Decimal @db.Decimal(10, 2)
+  unit     String?
+  optional Boolean @default(false)
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@index([name])
+}
