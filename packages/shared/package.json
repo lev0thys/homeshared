@@ -13,13 +13,14 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "echo \"(lint configuré au niveau racine)\" && exit 0",
-    "test": "echo \"no tests yet\" && exit 0",
+    "test": "echo \"tests in apps/api\" && exit 0",
     "build": "echo \"shared sert en source, pas de build\" && exit 0"
   },
   "dependencies": {
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.3"
   }
 }

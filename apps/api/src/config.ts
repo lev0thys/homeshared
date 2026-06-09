@@ -8,6 +8,9 @@ const ConfigSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  /** Requêtes max par IP et par fenêtre (toutes routes sauf /health). */
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_WINDOW: z.string().min(1).default('1 minute'),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;

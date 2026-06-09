@@ -14,11 +14,28 @@ export function errorHandler(
     return reply.status(status).send(err.toJSON());
   }
 
-  if (err instanceof ZodError) {
+  const fastifyErr = err as FastifyError & { code?: string; statusCode?: number };
+  if (fastifyErr.statusCode === 429 || fastifyErr.code === 'FST_ERR_RATE_LIMIT') {
+    return reply.status(429).send({
+      code: 'RATE_LIMITED',
+      message: 'Trop de requêtes. Réessayez dans un instant.',
+    });
+  }
+  if (fastifyErr.code === 'FST_ERR_CTP_EMPTY_JSON_BODY') {
     return reply.status(400).send({
       code: 'VALIDATION_ERROR',
-      message: 'Données invalides.',
-      details: err.flatten(),
+      message: 'Corps JSON vide alors que Content-Type est application/json.',
+    });
+  }
+
+  if (err instanceof ZodError) {
+    const flat = err.flatten();
+    const firstField =
+      Object.values(flat.fieldErrors).flat()[0] ?? flat.formErrors[0];
+    return reply.status(400).send({
+      code: 'VALIDATION_ERROR',
+      message: firstField ?? 'Données invalides.',
+      details: flat,
     });
   }
 

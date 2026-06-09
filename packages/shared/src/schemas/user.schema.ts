@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { avatarUrlSchema } from './avatar.schema.js';
 
 export const usernameSchema = z
   .string()
@@ -17,6 +18,8 @@ export const signupSchema = z.object({
   password: z.string().min(8, 'Le mot de passe doit faire au moins 8 caractères.'),
   username: usernameSchema,
   displayName: displayNameSchema,
+  /** Compte enfant créé par un parent (UX simplifiée, actions limitées). */
+  isChild: z.boolean().optional().default(false),
 });
 
 export const loginSchema = z.object({
@@ -24,9 +27,16 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis.'),
 });
 
+export const bioSchema = z
+  .string()
+  .trim()
+  .max(280, 'La bio ne doit pas dépasser 280 caractères.');
+
 export const updateProfileSchema = z.object({
   displayName: displayNameSchema.optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  avatarUrl: avatarUrlSchema.nullable().optional(),
+  bio: bioSchema.nullable().optional(),
+  isChild: z.boolean().optional(),
 });
 
 export type SignupInput = z.infer<typeof signupSchema>;

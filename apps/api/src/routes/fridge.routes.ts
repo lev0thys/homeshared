@@ -5,8 +5,10 @@ import {
   consumeFridgeItemSchema,
   ApiError,
 } from '@homeshared/shared';
-import { ensureMembership } from '../services/group.service.js';
+import { ensureGroupFeature, ensureMembership } from '../services/group.service.js';
 import { addToFridge } from '../services/fridge.service.js';
+import { getFridgeAvailability } from '../services/fridge-availability.service.js';
+import { rateLimitRoutes } from '../constants/rate-limits.js';
 
 export const fridgeRoutes: FastifyPluginAsync = async (app) => {
   app.addHook('preHandler', (req) => app.requireAuth(req));
@@ -15,16 +17,26 @@ export const fridgeRoutes: FastifyPluginAsync = async (app) => {
   app.get('/:groupId', async (req) => {
     const { groupId } = req.params as { groupId: string };
     await ensureMembership(app.prisma, groupId, req.userId!);
-    return app.prisma.fridgeItem.findMany({
-      where: { groupId },
-      orderBy: [{ expiresAt: { sort: 'asc', nulls: 'last' } }, { name: 'asc' }],
-    });
+    await ensureGroupFeature(app.prisma, groupId, 'FRIDGE');
+    const availability = await getFridgeAvailability(app.prisma, groupId);
+    return {
+      items: availability.items.map((i) => ({
+        ...i,
+        quantity: String(i.quantity),
+        reservedQuantity: String(i.reservedQuantity),
+        availableQuantity: String(i.availableQuantity),
+        expiresAt: i.expiresAt?.toISOString() ?? null,
+        addedAt: i.addedAt.toISOString(),
+      })),
+      reservations: availability.reservations,
+    };
   });
 
   // Ajout manuel d'un item au frigo (sans passer par la liste de courses)
-  app.post('/', async (req) => {
+  app.post('/', { config: rateLimitRoutes.write }, async (req) => {
     const input = createFridgeItemSchema.parse(req.body);
     await ensureMembership(app.prisma, input.groupId, req.userId!);
+    await ensureGroupFeature(app.prisma, input.groupId, 'FRIDGE');
     return app.prisma.$transaction(async (tx) => {
       await addToFridge(tx, {
         groupId: input.groupId,

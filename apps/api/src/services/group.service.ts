@@ -1,5 +1,7 @@
-import type { PrismaClient, GroupRole } from '@prisma/client';
-import { ApiError } from '@homeshared/shared';
+import type { Group, PrismaClient, GroupRole } from '@prisma/client';
+import { ApiError, DEFAULT_GROUP_FEATURES, hasGroupFeature, type GroupFeature } from '@homeshared/shared';
+
+export const PERSONAL_GROUP_NAME = 'Mon espace';
 
 export async function ensureMembership(
   prisma: PrismaClient,
@@ -26,4 +28,36 @@ export async function ensureRole(
   if (!allowed.includes(role)) {
     throw new ApiError('FORBIDDEN', 'Permissions insuffisantes pour cette action.');
   }
+}
+
+export async function ensureGroupFeature(
+  prisma: PrismaClient,
+  groupId: string,
+  feature: GroupFeature,
+): Promise<void> {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: { features: true },
+  });
+  if (!group || !hasGroupFeature(group.features, feature)) {
+    throw new ApiError('FORBIDDEN', `La fonctionnalité « ${feature} » n'est pas active pour ce groupe.`);
+  }
+}
+
+/** Crée l'espace personnel si l'utilisateur n'en a pas encore. */
+export async function ensurePersonalGroup(prisma: PrismaClient, userId: string): Promise<Group> {
+  const existing = await prisma.group.findFirst({
+    where: { ownerId: userId, isPersonal: true },
+  });
+  if (existing) return existing;
+
+  return prisma.group.create({
+    data: {
+      name: PERSONAL_GROUP_NAME,
+      ownerId: userId,
+      isPersonal: true,
+      features: [...DEFAULT_GROUP_FEATURES],
+      memberships: { create: { userId, role: 'OWNER' } },
+    },
+  });
 }

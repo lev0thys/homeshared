@@ -3,7 +3,10 @@ import { env } from './env';
 import type { ApiErrorBody } from '@homeshared/shared';
 
 class ApiClientError extends Error {
-  constructor(public readonly body: ApiErrorBody, public readonly status: number) {
+  constructor(
+    public readonly body: ApiErrorBody,
+    public readonly status: number,
+  ) {
     super(body.message);
   }
 }
@@ -17,16 +20,30 @@ async function authHeader(): Promise<Record<string, string>> {
 /**
  * Helper HTTP minimal qui :
  * - injecte le Bearer token Supabase
+ * - n'envoie Content-Type JSON que si un body est présent (évite FST_ERR_CTP_EMPTY_JSON_BODY sur DELETE)
  * - parse la réponse JSON
- * - throw une ApiClientError typée sur les non-2xx
  */
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = {
-    'Content-Type': 'application/json',
+  const headers: Record<string, string> = {
     ...(await authHeader()),
     ...(init.headers as Record<string, string> | undefined),
   };
-  const res = await fetch(`${env.API_URL}${path}`, { ...init, headers });
+
+  const hasBody = init.body !== undefined && init.body !== null && init.body !== '';
+  if (hasBody && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const res = await fetch(`${env.API_URL}${path}`, { ...init, headers }).catch((cause) => {
+    throw new ApiClientError(
+      {
+        code: 'INTERNAL_ERROR',
+        message:
+          'Serveur injoignable. Vérifie que l’API tourne sur le port 3001 (pnpm dev:api).',
+      },
+      0,
+    );
+  });
 
   if (!res.ok) {
     let body: ApiErrorBody;
@@ -39,15 +56,29 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 
   if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 export const api = {
   get: <T>(path: string) => request<T>(path, { method: 'GET' }),
   post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+    request<T>(path, {
+      method: 'POST',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'PUT',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
   patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
+    request<T>(path, {
+      method: 'PATCH',
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 };
 

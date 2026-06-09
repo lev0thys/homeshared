@@ -1,0 +1,6 @@
+# Exclusions globales archive EAS (chemins depuis racine git)
+.eas-*
+apps/mobile/android
+apps/mobile/ios
+apps/mobile/dist
+apps/mobile/.expo

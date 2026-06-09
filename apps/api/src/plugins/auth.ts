@@ -3,14 +3,18 @@ import fp from 'fastify-plugin';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { ApiError } from '@homeshared/shared';
 import { config } from '../config.js';
+import {
+  getCachedAuthUserId,
+  resolveDisplayName,
+  resolveUsername,
+  setCachedAuthUserId,
+  suggestUsernameFromMetadata,
+} from '../services/auth-cache.service.js';
+import { withPrismaReconnect } from '../services/prisma-reconnect.service.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
     supabase: SupabaseClient;
-    /**
-     * Garde d'authentification : décode le Bearer token Supabase,
-     * synchronise/crée l'utilisateur en base et l'attache à la request.
-     */
     requireAuth: (req: FastifyRequest) => Promise<void>;
   }
   interface FastifyRequest {
@@ -36,20 +40,49 @@ const plugin: FastifyPluginAsync = async (app) => {
       throw new ApiError('UNAUTHORIZED', 'Token invalide ou expiré.');
     }
 
-    // Synchronisation lazy : la première requête authentifiée d'un user
-    // Supabase crée son entrée locale (User) avec les métadonnées.
     const supabaseUser = data.user;
-    const localUser = await app.prisma.user.upsert({
-      where: { id: supabaseUser.id },
-      update: {},
-      create: {
-        id: supabaseUser.id,
-        email: supabaseUser.email ?? `${supabaseUser.id}@unknown.local`,
-        username: (supabaseUser.user_metadata?.username as string | undefined) ?? `user_${supabaseUser.id.slice(0, 8)}`,
-        displayName: (supabaseUser.user_metadata?.display_name as string | undefined) ?? 'Nouveau membre',
-      },
+
+    const cached = getCachedAuthUserId(supabaseUser.id);
+    if (cached) {
+      req.userId = cached;
+      return;
+    }
+
+    const localUser = await withPrismaReconnect(app.prisma, async () => {
+      const existing = await app.prisma.user.findUnique({
+        where: { id: supabaseUser.id },
+        select: { id: true },
+      });
+      if (existing) return existing;
+
+      const metadata = supabaseUser.user_metadata as Record<string, unknown> | undefined;
+      const metaUsername = suggestUsernameFromMetadata(metadata, supabaseUser.email ?? undefined);
+      let usernameTaken = false;
+      if (metaUsername) {
+        const taken = await app.prisma.user.findFirst({
+          where: { username: metaUsername, NOT: { id: supabaseUser.id } },
+          select: { id: true },
+        });
+        usernameTaken = !!taken;
+      }
+      const username = resolveUsername(metaUsername, supabaseUser.id, usernameTaken);
+      const displayName = resolveDisplayName(metadata, supabaseUser.email ?? undefined);
+
+      return app.prisma.user.upsert({
+        where: { id: supabaseUser.id },
+        update: {},
+        create: {
+          id: supabaseUser.id,
+          email: supabaseUser.email ?? `${supabaseUser.id}@unknown.local`,
+          username,
+          displayName,
+          isChild: metadata?.is_child === true,
+        },
+        select: { id: true },
+      });
     });
 
+    setCachedAuthUserId(supabaseUser.id, localUser.id);
     req.userId = localUser.id;
   });
 };

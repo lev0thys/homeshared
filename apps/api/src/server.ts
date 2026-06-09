@@ -1,3 +1,4 @@
+import './load-env.js';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
@@ -13,6 +14,12 @@ import { groupsRoutes } from './routes/groups.routes.js';
 import { shoppingRoutes } from './routes/shopping.routes.js';
 import { fridgeRoutes } from './routes/fridge.routes.js';
 import { recipesRoutes } from './routes/recipes.routes.js';
+import { ingredientsRoutes } from './routes/ingredients.routes.js';
+import { toolsRoutes } from './routes/tools.routes.js';
+import { storesRoutes } from './routes/stores.routes.js';
+import { chatRoutes } from './routes/chat.routes.js';
+import { tasksRoutes } from './routes/tasks.routes.js';
+import { mealPlanRoutes } from './routes/meal-plan.routes.js';
 
 export async function buildServer() {
   const app = Fastify({
@@ -25,9 +32,22 @@ export async function buildServer() {
     },
   });
 
-  await app.register(helmet);
+  // API consommée par Expo web (8081) → localhost:3001 : autoriser la lecture cross-origin.
+  await app.register(helmet, {
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  });
   await app.register(cors, { origin: true, credentials: true });
-  await app.register(rateLimit, { max: 200, timeWindow: '1 minute' });
+  await app.register(rateLimit, {
+    max: config.RATE_LIMIT_MAX,
+    timeWindow: config.RATE_LIMIT_WINDOW,
+    allowList: (req) => req.url.startsWith('/health'),
+    keyGenerator: (req) => req.ip,
+    errorResponseBuilder: (_req, context) => ({
+      code: 'RATE_LIMITED',
+      message: 'Trop de requêtes. Réessayez dans un instant.',
+      retryAfter: context.after,
+    }),
+  });
 
   app.setErrorHandler(errorHandler);
 
@@ -41,6 +61,12 @@ export async function buildServer() {
   await app.register(shoppingRoutes, { prefix: '/api/shopping' });
   await app.register(fridgeRoutes, { prefix: '/api/fridge' });
   await app.register(recipesRoutes, { prefix: '/api/recipes' });
+  await app.register(ingredientsRoutes, { prefix: '/api/ingredients' });
+  await app.register(toolsRoutes, { prefix: '/api/tools' });
+  await app.register(storesRoutes, { prefix: '/api/stores' });
+  await app.register(chatRoutes, { prefix: '/api/chat' });
+  await app.register(tasksRoutes, { prefix: '/api/tasks' });
+  await app.register(mealPlanRoutes, { prefix: '/api/meal-plan' });
 
   return app;
 }
@@ -56,4 +82,6 @@ async function start() {
   }
 }
 
-start();
+if (!process.env.VITEST) {
+  void start();
+}

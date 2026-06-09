@@ -1,10 +1,16 @@
 import { z } from 'zod';
 
 export const recipeIngredientInputSchema = z.object({
-  name: z.string().trim().min(1).max(80),
+  ingredientSlug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug invalide'),
   quantity: z.number().positive(),
   unit: z.string().trim().max(20).optional().nullable(),
   optional: z.boolean().default(false),
+  notes: z.string().trim().max(120).optional().nullable(),
 });
 
 export const createRecipeSchema = z.object({
@@ -20,15 +26,42 @@ export const createRecipeSchema = z.object({
 
 /**
  * Critères de matching d'une recette par rapport au frigo d'un groupe.
- * - missingMaxCount : nombre max d'ingrédients manquants tolérés
- * - includeOptionalMissing : si true, compte aussi les ingrédients optionnels manquants
  */
 export const matchRecipesSchema = z.object({
   groupId: z.string().uuid(),
   missingMaxCount: z.number().int().min(0).max(20).default(2),
   includeOptionalMissing: z.boolean().default(false),
+  /** Portions visées (scale les quantités requises vs `recipe.servings`). */
+  targetServings: z.number().int().min(1).max(50).optional(),
+  /** Filtre optionnel par cuisine. */
+  cuisine: z
+    .enum([
+      'FRENCH',
+      'ITALIAN',
+      'ASIAN',
+      'INDIAN',
+      'MEDITERRANEAN',
+      'MEXICAN',
+      'SEAFOOD',
+      'MEAT',
+      'VEGETARIAN',
+      'SOUP',
+      'SALAD',
+      'DESSERT',
+      'BREAKFAST',
+      'OTHER',
+    ])
+    .optional(),
 });
 
 export type CreateRecipeInput = z.infer<typeof createRecipeSchema>;
 export type MatchRecipesInput = z.infer<typeof matchRecipesSchema>;
 export type RecipeIngredientInput = z.infer<typeof recipeIngredientInputSchema>;
+
+/** Ajoute les ingrédients manquants d'une recette à la liste de courses du groupe. */
+export const addRecipeMissingToShoppingSchema = z.object({
+  groupId: z.string().uuid(),
+  targetServings: z.number().int().min(1).max(50).optional(),
+});
+
+export type AddRecipeMissingToShoppingInput = z.infer<typeof addRecipeMissingToShoppingSchema>;

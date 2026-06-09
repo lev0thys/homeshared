@@ -13,8 +13,18 @@
 
 $ErrorActionPreference = "Stop"
 
-# Rafraîchir le PATH
+# Rafraîchir le PATH (souvent nécessaire juste après `winget install GitHub.cli` :
+# le terminal ouvert avant l'install ne voit pas encore `gh`).
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+$ghCliDir = "C:\Program Files\GitHub CLI"
+if (-not (Get-Command gh -ErrorAction SilentlyContinue) -and (Test-Path "$ghCliDir\gh.exe")) {
+    $env:Path = "$ghCliDir;$env:Path"
+    Write-Host "==> gh trouvé dans $ghCliDir (PATH complété pour cette session)." -ForegroundColor Yellow
+}
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    Write-Error "La commande `gh` est introuvable. Installe GitHub CLI : winget install GitHub.cli puis rouvre ce terminal (ou Cursor)."
+    exit 1
+}
 
 Push-Location (Split-Path -Parent $PSScriptRoot)
 

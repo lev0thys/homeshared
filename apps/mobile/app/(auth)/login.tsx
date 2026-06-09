@@ -6,6 +6,11 @@ import { Screen } from '@/components/Screen';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { supabase } from '@/lib/supabase';
+import { formatAuthError } from '@/lib/auth-errors';
+import { DevConfigWarning } from '@/components/DevConfigWarning';
+import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { DownloadBanner } from '@/components/DownloadBanner';
+import { AppLogo } from '@/components/AppLogo';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -20,30 +25,23 @@ export default function LoginScreen() {
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (err) {
-      setError(err.message);
+      setError(formatAuthError(err));
       return;
     }
     router.replace('/(app)');
   }
 
-  async function handleGoogle() {
-    setError(null);
-    // OAuth Google : Supabase ouvre une fenêtre/onglet de consentement.
-    // Sur mobile natif, configurer le deep link homeshared:// dans Supabase.
-    const { error: err } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: 'homeshared://' },
-    });
-    if (err) setError(err.message);
-  }
-
   return (
     <Screen>
       <View className="flex-1 justify-center gap-6 max-w-md w-full mx-auto">
-        <View>
+        <View className="items-center gap-2">
+          <AppLogo size={64} />
           <Text className="text-3xl font-bold text-ink-900">{t('app.name')}</Text>
-          <Text className="text-base text-ink-500 mt-1">{t('app.tagline')}</Text>
+          <Text className="text-base text-ink-500 mt-1 text-center">{t('app.tagline')}</Text>
         </View>
+        <DevConfigWarning />
+
+        <DownloadBanner />
 
         <View className="gap-3">
           <Input
@@ -66,13 +64,14 @@ export default function LoginScreen() {
           <Button onPress={handleLogin} loading={loading}>
             {t('auth.loginButton')}
           </Button>
-          <Button onPress={handleGoogle} variant="secondary">
-            {t('auth.googleSignin')}
-          </Button>
+          <GoogleAuthButton onError={setError} />
         </View>
 
         <Link href="/(auth)/signup" className="text-center text-primary-700">
           {t('auth.switchToSignup')}
+        </Link>
+        <Link href="/download" className="text-center text-sm text-ink-500">
+          {t('download.title')} →
         </Link>
       </View>
     </Screen>

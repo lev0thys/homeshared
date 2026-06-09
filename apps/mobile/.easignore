@@ -1,0 +1,32 @@
+# Réduit l'archive EAS (monorepo — chemins depuis la racine git)
+# NE PAS exclure apps/api : pnpm-workspace référence apps/* → install échoue si absent
+.eas-*
+.eas-archive-test
+.eas-inspect
+.eas-check*
+.eas-preflight-check
+.eas-prebuild*
+# Natif généré localement — ne pas envoyer (EAS fait prebuild)
+android
+ios
+dist
+.expo
+# Monorepo — chemins depuis la racine git
+apps/mobile/android
+apps/mobile/ios
+apps/api/node_modules
+apps/api/dist
+export
+docs
+scripts
+templates
+play-store
+docker
+*.md
+!README.md
+
+# Indispensables pour détecter le workspace pnpm
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!package.json
+!.npmrc

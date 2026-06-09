@@ -1,3 +1,4 @@
+import '@/nativewind-setup';
 import '../global.css';
 import '@/lib/i18n';
 import { useEffect } from 'react';
@@ -8,13 +9,21 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 import { useSessionStore } from '@/stores/session.store';
+import { initAppAds } from '@/lib/ads-init';
 
 export default function RootLayout() {
   const setSession = useSessionStore((s) => s.setSession);
 
   useEffect(() => {
+    void initAppAds();
+  }, []);
+
+  useEffect(() => {
     // Récupère la session courante au démarrage puis écoute les changements
-    void supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => setSession(data.session))
+      .catch(() => setSession(null));
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);

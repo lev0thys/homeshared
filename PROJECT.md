@@ -42,13 +42,20 @@ Les autres modules (cartes de fidélité, tickets OCR, etc.) sont en backlog.
 - [x] Schéma de données complet (User, Group, Membership, ShoppingItem, FridgeItem, Recipe, Ingredient, Invite)
 - [x] API : routes auth, users, groups, invites, shopping, fridge, recipes (CRUD + matching)
 - [x] Mobile : écrans auth (login, signup), home (liste groupes), création groupe, détail groupe, listes courses, frigo, recettes
-- [ ] Connexion réelle à un projet Supabase (URL + keys)
-- [ ] Migration Prisma initiale appliquée
-- [ ] Test E2E manuel : signup → création groupe → invitation → ajout course → validation → apparition frigo → matching recette
-- [ ] Polish UI : icônes, loader states, error states, vide states
-- [ ] Build web PWA déployé (Vercel)
-- [ ] APK Android signé téléchargeable
-- [ ] Intégration brique `@tech-bricks/ads` (bannière sur l'écran groupes)
+- [x] Sync temps réel (hook `useGroupRealtime` + doc Supabase `docs/REALTIME-SETUP.md`)
+- [x] Politique de confidentialité in-app (`/privacy`) + templates `templates/legal/`
+- [x] Suppression compte RGPD (`DELETE /api/users/me` + UI profil)
+- [x] Consentement pubs UMP (`@tech-bricks/ads` v0.2 + `ads-init.ts`)
+- [x] Checklist E2E manuelle (`docs/E2E-CHECKLIST.md`)
+- [ ] Connexion réelle à un projet Supabase (URL + keys) — **Steve** (`docs/SETUP-STEVE.md`)
+- [ ] Realtime activé sur tables Supabase — **Steve** (`docs/REALTIME-SETUP.md`)
+- [ ] Migration Prisma initiale versionnée (optionnel si db-push suffit en dev)
+- [ ] Test E2E manuel complet coché (`docs/E2E-CHECKLIST.md`)
+- [x] Polish UI : icônes, loader states, error states, vide states (itérations continues)
+- [ ] Build web PWA déployé (Vercel) — config prête : `docs/DEPLOYMENT.md` + `vercel.json`
+- [ ] APK Android signé téléchargeable — EAS `preview` / page `/download`
+- [ ] Play Store publié — EAS `production` + `play-store/descriptions/`
+- [x] Intégration brique `@tech-bricks/ads` (bannière + UMP consent)
 
 ## Hors-scope v1 (→ BACKLOG.md)
 
@@ -64,7 +71,7 @@ Les autres modules (cartes de fidélité, tickets OCR, etc.) sont en backlog.
 ## Briques tech-bricks utilisées
 
 - `@tech-bricks/auth-supabase` v0.1.0 (wrapper Supabase Auth)
-- `@tech-bricks/ads` v0.1.0 (stub, intégration AdMob réelle en v1.1)
+- `@tech-bricks/ads` v0.2.0 (AdMob bannière + consentement UMP)
 
 ## Démarrage de la semaine
 

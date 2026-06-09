@@ -63,11 +63,38 @@ export interface Recipe {
   ingredients: RecipeIngredient[];
 }
 
+export type IngredientCategory =
+  | 'VEGETABLE'
+  | 'FRUIT'
+  | 'DAIRY'
+  | 'MEAT'
+  | 'FISH'
+  | 'SEAFOOD'
+  | 'GRAIN'
+  | 'LEGUME'
+  | 'CONDIMENT'
+  | 'SPICE'
+  | 'OIL'
+  | 'BAKERY'
+  | 'OTHER';
+
+export interface Ingredient {
+  id: UUID;
+  slug: string;
+  nameFr: string;
+  nameEn: string | null;
+  category: IngredientCategory;
+  defaultUnit: string | null;
+  aliases: string[];
+}
+
 export interface RecipeIngredient {
   id: UUID;
   recipeId: UUID;
-  name: string;
+  ingredientId: UUID;
   quantity: number;
   unit: string | null;
   optional: boolean;
+  notes: string | null;
+  ingredient?: Pick<Ingredient, 'id' | 'slug' | 'nameFr' | 'nameEn' | 'category' | 'defaultUnit'>;
 }

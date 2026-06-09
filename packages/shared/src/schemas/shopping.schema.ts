@@ -6,7 +6,7 @@ export const itemNameSchema = z
   .min(1, 'Le nom est obligatoire.')
   .max(80, 'Le nom est trop long.');
 
-export const quantitySchema = z
+export const quantitySchema = z.coerce
   .number()
   .positive('La quantité doit être positive.')
   .max(10000, 'Quantité trop élevée.');
@@ -37,6 +37,13 @@ export const purchaseShoppingItemSchema = z.object({
   purchasedQuantity: quantitySchema.optional(),
 });
 
+/** Finalise les courses : supprime les articles déjà dans le caddie (déjà au frigo). */
+export const finalizeShoppingSchema = z.object({
+  /** Supprime aussi les articles non cochés (sans les ajouter au frigo). */
+  discardUnpurchased: z.boolean().optional().default(false),
+});
+
 export type CreateShoppingItemInput = z.infer<typeof createShoppingItemSchema>;
 export type UpdateShoppingItemInput = z.infer<typeof updateShoppingItemSchema>;
 export type PurchaseShoppingItemInput = z.infer<typeof purchaseShoppingItemSchema>;
+export type FinalizeShoppingInput = z.infer<typeof finalizeShoppingSchema>;

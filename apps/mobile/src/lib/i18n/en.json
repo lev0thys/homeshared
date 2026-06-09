@@ -10,7 +10,8 @@
     "delete": "Delete",
     "confirm": "Confirm",
     "back": "Back",
-    "error": "Something went wrong."
+    "error": "Something went wrong.",
+    "seeAll": "See all"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -28,13 +29,55 @@
   },
   "groups": {
     "title": "My groups",
-    "empty": "No group yet. Create one to share a shopping list, fridge or recipes!",
+    "empty": "Your personal space is created automatically on first visit.",
     "newGroup": "New group",
     "groupName": "Group name",
     "groupDescription": "Description (optional)",
     "create": "Create group",
+    "createBlockedTitle": "Cannot create a group",
+    "createBlockedMessage": "This account is in child mode. Sign up with an adult account or turn off child mode at registration.",
     "invite": "Invite members",
-    "members": "Members"
+    "members": "Members",
+    "joinGroup": "Join a group",
+    "loadError": "Could not load your groups (API unreachable).",
+    "loadErrorHint": "Start the API on port 3001 (pnpm dev:api), then retry.",
+    "retry": "Retry",
+    "homeTab": "Home",
+    "personalBadge": "Personal space",
+    "quickActions": "Quick access",
+    "spacesTitle": "Spaces",
+    "statusShopping": "{{count}} to buy",
+    "statusFridge": "{{count}} in fridge",
+    "statusMeals": "{{count}} meal(s) planned",
+    "notFound": "Group not found.",
+    "featuresTitle": "Group features",
+    "featuresHint": "Enable only the modules you need.",
+    "featuresMinOne": "At least one feature must stay enabled.",
+    "deleteGroup": "Delete group",
+    "deleteTitle": "Delete this group?",
+    "deleteMessage": "All lists, fridge data and group content will be removed.",
+    "editProfile": "Space profile",
+    "editProfileButton": "Edit space profile",
+    "nameRequiredTitle": "Name required",
+    "nameRequiredMessage": "Space name cannot be empty.",
+    "personalNameLocked": "Personal space name is fixed.",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "e.g. Flat share, beach house…",
+    "saveProfile": "Save",
+    "profileSavedTitle": "Space updated",
+    "profileSavedMessage": "Image and description were saved.",
+    "feature": {
+      "SHOPPING": "Shopping list",
+      "FRIDGE": "Virtual fridge",
+      "RECIPES": "Recipes"
+    }
+  },
+  "invite": {
+    "joinTitle": "Join a group",
+    "joinHint": "Paste the invite code you received from a group member.",
+    "tokenLabel": "Invite code",
+    "joinButton": "Join",
+    "shareMessage": "Join my group on homeshared! Invite code:"
   },
   "shopping": {
     "title": "Shopping list",
@@ -46,14 +89,32 @@
     "addedBy": "Added by {{name}}",
     "purchased": "Purchased",
     "markPurchased": "Check (in cart)",
-    "uncheck": "Uncheck"
+    "uncheck": "Uncheck",
+    "deleteTitle": "Delete this item?",
+    "deleteMessage": "This cannot be undone.",
+    "deleteHint": "Long press or Select to delete multiple items",
+    "selectMode": "Select items",
+    "deleteSelected": "Delete ({{count}})",
+    "tapToEditQty": "tap to edit",
+    "comparePrices": "Compare prices (stores)",
+    "viewInStore": "View in store →"
   },
   "fridge": {
     "title": "Fridge",
     "empty": "Fridge is empty. Check items off the shopping list or add manually.",
+    "itemName": "Item name",
     "addItem": "Add to fridge",
+    "editHint": "Tap an item to edit quantity, unit, or delete.",
     "consume": "Use",
-    "expiresOn": "Expires on {{date}}"
+    "expiresOn": "Expires on {{date}}",
+    "reservedTitle": "Reserved for meal plan",
+    "reservedHint": "Still in the fridge but already allocated to a planned meal this week.",
+    "reservedOneLine": "Meal plan reserved · already allocated this week —",
+    "reservedQty": "{{qty}} {{unit}} reserved",
+    "availableQty": "{{qty}} {{unit}} free",
+    "goToMealPlan": "View meal plan",
+    "expiresSoon": "Use by {{date}}",
+    "expiresUrgent": "Expired or use by {{date}}"
   },
   "recipes": {
     "title": "Recipes",
@@ -64,6 +125,137 @@
     "prepTime": "{{minutes}} min prep",
     "cookTime": "{{minutes}} min cook",
     "servings": "{{count}} serving",
-    "servings_plural": "{{count}} servings"
+    "servings_plural": "{{count}} servings",
+    "targetServings": "Number of servings",
+    "maxFeasibleServings": "Fridge only covers {{max}} of {{target}} requested serving(s).",
+    "insufficientIngredient": "{{name}}: {{have}}/{{need}} {{unit}} in fridge",
+    "openDetail": "View recipe →",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "optional": "optional",
+    "stepProgress": "Step {{current}} / {{total}}",
+    "stepLabel": "Step {{number}}",
+    "prevStep": "Previous",
+    "nextStep": "Next",
+    "done": "Done ✓",
+    "noSteps": "No detailed steps.",
+    "viewPlain": "Plain text",
+    "viewSteps": "Step mode",
+    "nav": {
+      "match": "Fridge ideas",
+      "mealPlan": "Week",
+      "discover": "Discover",
+      "catalog": "Catalog"
+    }
+  },
+  "hub": {
+    "title": "Home",
+    "logoA11y": "homeshared — back to home",
+    "backToHub": "Back to home",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "openGroupActions": "Join or create a group",
+    "closeGroupActions": "Close group menu",
+    "personalTools": "Tools",
+    "spacesTitle": "Spaces",
+    "toolsTitle": "Tools",
+    "personalHint": "Modules outside your groups — season, garden, stores, recipes…",
+    "beta": "Beta"
+  },
+  "modules": {
+    "SEASON": "Seasonal produce",
+    "GARDEN": "Gardening",
+    "STORES": "Stores & prices",
+    "RECIPES_BROWSE": "Recipe catalog"
+  },
+  "season": {
+    "hint": "Indicative guide — mainland France. Actual season varies by region, weather and origin (local, greenhouse, imported). Not a substitute for local farming advice.",
+    "favorites": "Favorites",
+    "favoritesEmpty": "No seasonal favorites this month. Tap ☆ to add some.",
+    "fruits": "Fruit",
+    "vegetables": "Vegetables",
+    "empty": "Few entries this month in our database."
+  },
+  "garden": {
+    "hint": "Indicative sowing and planting calendar. Adjust for frost and your climate — earlier in the south, later in the north and mountains.",
+    "betaNote": "Indicative data — adjust for your region.",
+    "favorites": "Favorites",
+    "favoritesEmpty": "No garden favorites this month. Tap ☆ to add some.",
+    "empty": "No garden tasks this month.",
+    "action": {
+      "semis": "Sow",
+      "plantation": "Plant",
+      "bouture": "Cutting",
+      "recolte": "Harvest"
+    }
+  },
+  "stores": {
+    "hint": "Product search and indicative price comparison.",
+    "betaNote": "Mock prices — no drive checkout link yet.",
+    "searchTitle": "Find a product",
+    "searchPlaceholder": "e.g. potato, milk…",
+    "compareTitle": "Compare a list",
+    "comparePlaceholder": "One item per line…",
+    "compareButton": "Compare prices",
+    "cheapest": "Cheapest chain (estimate)",
+    "bestOffer": "Best price: {{store}} (~{{price}} €)"
+  },
+  "recipesBrowse": {
+    "hint": "Browse all catalog recipes (no fridge matching).",
+    "empty": "No recipes in database."
+  },
+  "chat": {
+    "title": "Group chat",
+    "open": "Chat",
+    "empty": "No messages yet. Start the conversation!",
+    "placeholder": "Your message…",
+    "send": "Send",
+    "you": "You"
+  },
+  "profile": {
+    "deleteAccountTitle": "Delete my account",
+    "deleteAccountHint": "Permanent action: personal groups and data will be erased. Not allowed if you own a shared group with other members.",
+    "deleteAccountMessage": "Permanently delete your account and personal data?",
+    "deleteAccountConfirm": "Delete permanently",
+    "deleteAccountError": "Could not delete account."
+  },
+  "download": {
+    "title": "Download",
+    "headline": "homeshared",
+    "subtitle": "Shared shopping, fridge and recipes for your household.",
+    "bannerAndroid": "Install Android app (APK)",
+    "bannerIos": "Install on iPhone / iPad",
+    "bannerHint": "Direct download from this website",
+    "webTitle": "Use in browser",
+    "webHint": "Access the app from your computer or tablet without installing.",
+    "openWebApp": "Open web app",
+    "pwaHint": "On desktop: add a shortcut from your browser menu.",
+    "androidTitle": "Android — APK",
+    "androidHint": "Download and install the native app (sideload without Play Store).",
+    "androidStepsTitle": "APK installation",
+    "androidStep1": "Tap « Download APK » — the homeshared.apk file will download.",
+    "androidStep2": "Open the downloaded file. If prompted, allow « Unknown sources » for your browser.",
+    "androidStep3": "Confirm installation, then open homeshared from your home screen.",
+    "playStore": "Google Play Store (recommended)",
+    "playStoreSoon": "Coming soon on Play Store — use the APK above in the meantime.",
+    "apkDirect": "Download APK",
+    "iosTitle": "iPhone / iPad — install app",
+    "iosHint": "Apple does not allow APK installs. Use the installable web app (PWA) — same experience.",
+    "iosNoApk": "No file to download on iOS: add the app to your home screen from Safari.",
+    "iosStepsTitle": "Add to Home Screen (Safari)",
+    "iosStep1": "Open this site in Safari (not Chrome) and sign in or create an account.",
+    "iosStep2": "Tap Share (square icon with arrow pointing up).",
+    "iosStep3": "Choose « Add to Home Screen », then « Add ». homeshared opens full screen."
+  },
+  "legal": {
+    "sectionTitle": "Legal information",
+    "privacyTitle": "Privacy policy",
+    "privacyLink": "Privacy policy",
+    "privacySignupHint": "By creating an account, you accept our privacy policy.",
+    "lastUpdated": "Last updated: {{date}}",
+    "backToApp": "Back to app",
+    "adsPreferencesTitle": "Ad preferences",
+    "adsPreferencesLink": "Manage ad preferences",
+    "adsPreferencesUnavailable": "Form unavailable (Android build required)."
   }
 }

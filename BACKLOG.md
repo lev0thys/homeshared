@@ -2,12 +2,40 @@
 
 ## v1.x (post-v1 court terme)
 
-### [v1.1] AdMob réel branché
-- **Description courte** : Brancher `react-native-google-mobile-ads` dans la brique `@tech-bricks/ads`, intégrer la bannière sur l'écran groupes.
-- **Complexité** : 4/10
-- **Valeur estimée** : 🟢 forte (revenus)
-- **Notes techniques** : nécessite compte AdMob + config plugin Expo + UMP RGPD.
-- **Ajoutée le** : 2026-05-26
+### [v1.x] Anti-spam renforcé (WAF / Supabase) — complément rate limit API
+- **Description courte** : Couche infra au-delà du rate limit Fastify déjà en place (100 req/min/IP + limites par route).
+- **Complexité** : 3/10
+- **Valeur estimée** : 🟡 moyenne (surtout si trafic public augmente)
+- **Notes techniques** : activer rate limits Supabase Auth (signup/login) ; option Fly.io `fly proxy` / WAF ou Cloudflare devant l’API ; captcha sur signup si abus ; monitoring 429 dans logs Fly.
+- **Ajoutée le** : 2026-06-09
+
+### [v1.1] Instructions desserts catalogue — FAIT (2026-05-28)
+- 20 desserts : remplacement textes génériques par étapes réelles + validateur bloquant.
+- Commandes : `pnpm recipes:validate`, `pnpm recipes:patch`, `pnpm prisma:seed`.
+
+### [v1.1] Pool Supabase + auth cache — FAIT côté code (2026-05-28)
+- Cache auth 5 min, reconnexion Prisma, logs allégés, cache mobile 24h
+- **Steve** : suivre `docs/SETUP-STEVE.md` étape 1 (URLs pooler 6543 + direct 5432)
+
+### [v1.x] Recettes enrichies — plan semaine, catégories, favoris ★ (2026-05-31)
+- **Description** : étoile favori cliquable, filtres cuisine (indien, italien…), % + ingrédients manquants, repas de la semaine (lundi midi…), onglets Habitudes / Favoris / Propositions / Saison / Découverte, baisse de fréquence si propositions ignorées.
+- **Complexité** : 7/10
+- **Valeur estimée** : 🟢 forte
+- **Notes** : `pnpm prisma:db-push` + `pnpm prisma:seed` requis (champ `Recipe.cuisine`, `MealPlanEntry`, `RecipeProposalDismiss`).
+- **Reste v2** : notes/avis recettes, saison branchée sur module jardin, notifications push rappels repas.
+- **Ajoutée le** : 2026-05-31
+
+### [v1.1] AdMob bannière accueil — FAIT (2026-05-28)
+- Bannière `@tech-bricks/ads` sur écran **Mes espaces** ; IDs AdMob réels Steve (`home_banner`).
+- **Steve** : build APK EAS pour voir les vraies pubs (pas web / Expo Go). Voir `docs/PUBLICATION-ANDROID-ADS.md`.
+- **UMP consentement RGPD** : FAIT v1 (2026-05-28) — `requestAdsConsent` + préférences profil Android.
+
+### [v1.x] Pubs opt-in recettes (rewarded) — avec refonte recettes
+- **Description courte** : Vidéos récompensées **facultatives** aux moments « satisfaction » : fin des étapes recette (`RecipeStepper`), repas marqué cuisiné (planning), plus tard création recette. Jamais obligatoire ; masqué comptes enfant ; cooldown session.
+- **Complexité** : 5/10
+- **Valeur estimée** : 🟢 forte (revenus > bannière seule, UX non invasive)
+- **Notes techniques** : brancher `showRewardedAd` dans `@tech-bricks/ads`, unité AdMob Rewarded, dépend du chantier recettes (stepper, mark done). Bannière accueil conservée en v1.
+- **Ajoutée le** : 2026-05-28
 
 ### [v1.1] Magic link auth
 - **Description courte** : Ajouter le login par lien email (Supabase le supporte nativement).
@@ -29,6 +57,69 @@
 - **Valeur estimée** : 🟡 moyenne
 - **Notes techniques** : API déjà prête, juste UI.
 - **Ajoutée le** : 2026-05-26
+
+### [v2] Modules métier par groupe (barbecue, cartes fidélité…)
+- **Description courte** : Étendre `features` au-delà de SHOPPING/FRIDGE/RECIPES (ex. BARBECUE avec planning invités, sans frigo).
+- **Complexité** : 6/10
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** : base posée (`Group.features[]`, onglets conditionnels). Ajouter écran + API par module.
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Catalogue produits magasins FR (priorité gratuite, sans partenaire)
+- **Description courte** : Recherche produits avec images, variantes (ex. pommes de terre grenaille), export vers drive courses en ligne si faisable « maison ».
+- **Complexité** : 9/10
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** (choix PO Steve, 2026-05-29) :
+  - **Gratuit d’abord**, temps de dev OK.
+  - **Images** : pas d’API magasin fiable/gratuite → Open Food Facts (API libre) + icônes/illustrations catalogue maison en secours.
+  - **Liste produits** : enrichir notre catalogue `Ingredient` (aliases, variantes) ; OFF pour EAN/nom proche ; pas de scrape drive en v1 (ToS).
+  - **Export courses en ligne** : v2.1 = copier/coller liste structurée ; v2.2 = deep links manuels par enseigne (URLs panier, sans API) ; intégration API magasin seulement si compte dev gratuit un jour.
+  - Enseignes cibles à préciser : Carrefour / Leclerc / Auchan (ordre TBD).
+- **Ajoutée le** : 2026-05-29
+
+## v2 (post-v1)
+
+### [v2] Calendrier saison aligné Manger Bouger + régions
+- **Description courte** : Enrichir `season.produce.ts` (cresson, oseille, blettes…), script d’audit mensuel automatisé, profils Nord/Sud/Méditerranée.
+- **Complexité** : 5/10
+- **Valeur estimée** : 🟢 forte (confiance utilisateur)
+- **Notes techniques** : `scripts/audit-season-calendar.mjs`, voir `docs/audit-calendriers-saison-jardin.md`.
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Compte enfant géré par parent (sans email)
+- **Description courte** : Le parent crée le profil enfant sans inscription email séparée (login familial ou PIN).
+- **Complexité** : 6/10
+- **Valeur estimée** : 🟢 forte (foyers famille)
+- **Notes techniques** : Supabase custom claims ou comptes liés ; RGPD consentement parental.
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Notifications push rappels repas / tâches
+- **Description courte** : Envoyer une notification à `reminderAt` (préparation repas, cuisson, tâches assignées).
+- **Complexité** : 5/10
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** : Expo Notifications + cron/worker ; `HouseholdTask.reminderAt` déjà en place.
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Fuzzy match frigo ↔ catalogue (nom libre → ingrédient le plus proche)
+- **Description courte** : « pomme de terre » saisi → proposer rattachement à l’ingrédient canonique + score de confiance.
+- **Complexité** : 5/10
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** : aliases déjà en seed ; étendre normalisation + UI « Ce n’est pas la bonne correspondance ».
+- **Ajoutée le** : 2026-05-29
+
+### [v2] Recettes externes (Marmiton / Spoonacular)
+- **Description courte** : Import ou lien vers recettes tierces depuis l’écran détail.
+- **Complexité** : 6/10
+- **Valeur estimée** : 🟡 moyenne
+- **Notes techniques** : pas d’API Marmiton officielle ; Spoonacular payant ; alternative : catalogue interne enrichi.
+- **Ajoutée le** : 2026-05-29
+
+### [v2] Espace utilisateur sans concept de « groupe »
+- **Description courte** : UI solo qui masque le mot « groupe » ; données toujours sous un espace personnel technique.
+- **Complexité** : 4/10
+- **Valeur estimée** : 🟡 moyenne
+- **Notes techniques** : `isPersonal` + auto-création déjà en place ; reste le parcours UX (redirect direct, pas de liste).
+- **Ajoutée le** : 2026-05-28
 
 ## v2 (post-v1, moyen terme)
 

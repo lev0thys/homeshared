@@ -7,13 +7,34 @@
   "scripts": {
     "dev:api": "pnpm --filter @homeshared/api dev",
     "dev:mobile": "pnpm --filter @homeshared/mobile start",
+    "dev:stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-dev.ps1",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "typecheck": "pnpm -r typecheck",
     "prisma:generate": "pnpm --filter @homeshared/api prisma:generate",
-    "prisma:migrate": "pnpm --filter @homeshared/api prisma:migrate"
+    "prisma:migrate": "pnpm --filter @homeshared/api prisma:migrate",
+    "prisma:db-push": "pnpm --filter @homeshared/api prisma:db-push",
+    "prisma:seed": "pnpm --filter @homeshared/api prisma:seed",
+    "recipes:generate": "node scripts/generate-recipe-bulk.mjs",
+    "recipes:validate": "pnpm --filter @homeshared/api exec tsx ../../scripts/validate-recipes.mjs",
+    "recipes:patch": "node scripts/apply-recipe-patches.mjs",
+    "recipes:audit": "pnpm --filter @homeshared/api exec tsx ../../scripts/audit-recipes-report.mjs",
+    "smoke:auth": "node scripts/test-supabase-auth.mjs",
+    "smoke:stack": "powershell -ExecutionPolicy Bypass -File scripts/smoke-stack.ps1",
+    "test:features": "node scripts/test-features-api.mjs",
+    "build:web": "pnpm --filter @homeshared/mobile build:web",
+    "fetch:apk": "node scripts/fetch-apk-for-vercel.mjs",
+    "build:web:prod": "node scripts/fetch-apk-for-vercel.mjs && pnpm build:web",
+    "deploy:api": "fly deploy",
+    "deploy:fly-secrets": "powershell -ExecutionPolicy Bypass -File scripts/deploy-fly-secrets.ps1",
+    "deploy:eas-env": "powershell -ExecutionPolicy Bypass -File scripts/deploy-eas-secrets.ps1",
+    "deploy:vercel-env": "powershell -ExecutionPolicy Bypass -File scripts/deploy-vercel-env.ps1",
+    "deploy:web": "pnpm build:web",
+    "export:publication": "powershell -ExecutionPolicy Bypass -File scripts/export-publication.ps1",
+    "verify": "pnpm typecheck && pnpm --filter @homeshared/api test",
+    "verify:full": "pnpm verify && pnpm test:features"
   },
   "devDependencies": {
     "@types/node": "^22.7.0",
@@ -24,5 +45,11 @@
     "node": ">=22.0.0",
     "pnpm": ">=9.0.0"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@9.15.9",
+  "pnpm": {
+    "overrides": {
+      "react-native-css-interop": "0.1.22",
+      "react-native-google-mobile-ads": "14.2.3"
+    }
+  }
 }

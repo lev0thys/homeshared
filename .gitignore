@@ -26,6 +26,16 @@ coverage/
 prisma/migrations/dev.db*
 
 # Expo / EAS
+.eas-preflight/
+.eas-preflight-check/
+.eas-check/
+.eas-check*/
+.eas-prebuild*/
+.eas-inspect/
+.eas-archive-test/
+.eas-log*.txt
+.eas-log*.bin
+.eas-build.json
 ios/
 android/
 *.jks
@@ -35,3 +45,12 @@ android/
 *.orig.*
 google-services.json
 GoogleService-Info.plist
+
+# Play Store (secrets locaux)
+play-store/service-account.json
+play-store/*.json
+!play-store/README.md
+
+# APK binaire (trop lourd pour git — hébergé sur Vercel)
+apps/mobile/public/download.apk
+.vercel

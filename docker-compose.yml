@@ -1,0 +1,23 @@
+# Postgres local pour Prisma (migrations, seed) sans dépendre du cloud le 1er jour.
+# Démarrage : docker compose up -d
+# DATABASE_URL par défaut dans .env.example = postgresql://postgres:postgres@localhost:5432/homeshared
+#
+# Note : l'authentification utilisateur reste Supabase (JWT). Pour un login réel,
+# il faut quand même un projet Supabase + clés dans .env (voir README).
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: homeshared-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: homeshared
+    volumes:
+      - homeshared_pgdata:/var/lib/postgresql/data
+
+volumes:
+  homeshared_pgdata:

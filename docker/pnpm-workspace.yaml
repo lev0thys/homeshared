@@ -1,0 +1,4 @@
+# Workspace minimal pour le build Docker API (sans tech-bricks mobile).
+packages:
+  - "apps/api"
+  - "packages/shared"

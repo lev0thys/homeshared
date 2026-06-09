@@ -1,0 +1,25 @@
+# Contexte Docker minimal pour l'API (evite symlinks Windows pnpm -> erreur tar)
+.git
+**/.git
+node_modules
+**/node_modules
+**/.pnpm-store
+**/.env
+**/.env.*
+.cursor
+.vscode
+.eas-archive-test
+export
+play-store
+apps/mobile
+apps/mobile/**
+scripts
+docs
+templates
+*.md
+!apps/api/README.md
+**/*.test.ts
+**/__tests__
+**/.expo
+**/dist
+**/coverage

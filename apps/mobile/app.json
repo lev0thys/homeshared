@@ -6,20 +6,22 @@
     "scheme": "homeshared",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "backgroundColor": "#0f172a",
       "resizeMode": "contain"
     },
     "android": {
       "package": "com.steve.homeshared",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0f172a"
       }
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "name": "homeshared",
       "shortName": "homeshared",
       "description": "Hub partagé pour foyers : courses, frigo, recettes.",
@@ -31,6 +33,28 @@
     "experiments": {
       "typedRoutes": true
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "homeshared utilise vos photos pour choisir une image de profil."
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "baaf666f-0712-4613-b95d-954f1b8489eb"
+      }
+    },
+    "owner": "lev0thy"
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-7481856300171485~8831981202",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

@@ -22,11 +22,12 @@ export async function addToFridge(
   input: AddToFridgeInput,
 ): Promise<void> {
   const normalizedName = input.name.trim();
+  const unitValue = input.unit?.trim() || null;
   const existing = await tx.fridgeItem.findFirst({
     where: {
       groupId: input.groupId,
       name: { equals: normalizedName, mode: 'insensitive' },
-      unit: input.unit ?? null,
+      ...(unitValue === null ? { unit: { equals: null } } : { unit: unitValue }),
     },
     orderBy: { addedAt: 'desc' },
   });
@@ -44,7 +45,7 @@ export async function addToFridge(
       groupId: input.groupId,
       name: normalizedName,
       quantity: input.quantity,
-      unit: input.unit,
+      unit: unitValue,
     },
   });
 }

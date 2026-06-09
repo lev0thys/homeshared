@@ -1,75 +1,224 @@
-import { FlatList, Pressable, Text, View } from 'react-native';
-import { Link, Stack } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+
+import { RefreshControl, Text, View, type LayoutChangeEvent } from 'react-native';
+import { VerticalSwipeScroll } from '@/components/VerticalSwipeScroll';
+
+import { Stack } from 'expo-router';
+
 import { useQuery } from '@tanstack/react-query';
+
 import { useTranslation } from 'react-i18next';
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Screen } from '@/components/Screen';
+
 import { Button } from '@/components/Button';
+
+import { LoadingCenter } from '@/components/LoadingCenter';
+
+import { EmptyState } from '@/components/EmptyState';
+
+import { SeasonPreviewStrip } from '@/components/SeasonPreviewStrip';
+
+import { HubIconCarousel, type HubCarouselItem } from '@/components/HubIconCarousel';
+
+import { AdBanner } from '@/components/AdBanner';
+
+import { HubGroupFab } from '@/components/HubGroupFab';
+import { HubPersonalModules } from '@/components/HubPersonalModules';
+import { HubSection } from '@/components/HubSection';
+
 import { api } from '@/lib/api-client';
-import { router } from 'expo-router';
-import { supabase } from '@/lib/supabase';
+
+import { useHubFavorites } from '@/hooks/useHubFavorites';
+
+import { useCanCreateGroup } from '@/hooks/useCanCreateGroup';
+
+
+
 
 interface GroupListItem {
+
   id: string;
+
   name: string;
+
   description: string | null;
+
+  imageUrl: string | null;
+
+  isPersonal: boolean;
+
+  features?: string[];
+
+  myRole?: 'OWNER' | 'ADMIN' | 'MEMBER';
+
   _count: { memberships: number };
+
 }
+
+
+
+function groupHubIcon(item: GroupListItem): string {
+
+  if (item.isPersonal) return '🏡';
+
+  return '👥';
+
+}
+
+
 
 export default function HomeScreen() {
+
   const { t } = useTranslation();
-  const { data: groups, isLoading } = useQuery({
+
+  const insets = useSafeAreaInsets();
+
+  const [dockHeight, setDockHeight] = useState(72 + insets.bottom);
+
+  const fabBottom = dockHeight + 12;
+
+  const { canCreateGroup } = useCanCreateGroup();
+
+  const groupFavorites = useHubFavorites('groups');
+  const moduleFavorites = useHubFavorites('modules');
+
+  const {
+
+    data: groups,
+
+    isLoading,
+
+    isError,
+
+    error,
+
+    refetch,
+
+    isRefetching,
+
+  } = useQuery<GroupListItem[]>({
+
     queryKey: ['groups'],
-    queryFn: () => api.get<GroupListItem[]>('/api/groups'),
+
+    queryFn: (): Promise<GroupListItem[]> => api.get<GroupListItem[]>('/api/groups'),
+
+    retry: 1,
+
   });
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.replace('/(auth)/login');
-  }
+
+
+  const groupItems: HubCarouselItem[] = useMemo(
+
+    () =>
+
+      (groups ?? []).map((g: GroupListItem) => ({
+
+        id: g.id,
+
+        icon: groupHubIcon(g),
+
+        route: `/(app)/groups/${g.id}`,
+
+        accessibilityLabel: g.name,
+
+        subtitle: g.name,
+
+        isPersonal: g.isPersonal,
+
+        imageUrl: g.imageUrl ?? null,
+
+      })),
+
+    [groups],
+
+  );
+
+
+
+  const onDockLayout = useCallback((e: LayoutChangeEvent) => {
+
+    setDockHeight(e.nativeEvent.layout.height + 16);
+
+  }, []);
+
+
 
   return (
-    <Screen>
-      <Stack.Screen
-        options={{
-          title: t('groups.title'),
-          headerRight: () => (
-            <Pressable onPress={handleLogout} className="px-2">
-              <Text className="text-white text-sm">{t('auth.logout')}</Text>
-            </Pressable>
-          ),
-        }}
-      />
 
-      <FlatList
-        data={groups ?? []}
-        keyExtractor={(g) => g.id}
-        ItemSeparatorComponent={() => <View className="h-3" />}
-        ListEmptyComponent={
-          !isLoading ? (
-            <Text className="text-center text-ink-500 px-6 mt-12">{t('groups.empty')}</Text>
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <Link href={`/(app)/groups/${item.id}`} asChild>
-            <Pressable className="bg-white border border-ink-100 rounded-2xl p-4 active:bg-ink-50">
-              <Text className="text-lg font-semibold text-ink-900">{item.name}</Text>
-              {item.description ? (
-                <Text className="text-sm text-ink-500 mt-1" numberOfLines={2}>
-                  {item.description}
-                </Text>
-              ) : null}
-              <Text className="text-xs text-ink-400 mt-2">
-                {item._count.memberships} {t('groups.members').toLowerCase()}
+    <Screen safeBottom={false}>
+
+      <Stack.Screen options={{ headerTitle: t('hub.title'), headerTitleAlign: 'center', headerLeft: () => null }} />
+
+
+
+      <VerticalSwipeScroll
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: dockHeight + 56, flexGrow: 1 }}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />}
+      >
+
+        {isLoading ? (
+          <HubSection title={t('hub.spacesTitle')}>
+            <LoadingCenter />
+          </HubSection>
+        ) : isError ? (
+          <HubSection title={t('hub.spacesTitle')}>
+            <View className="gap-3">
+              <Text className="text-red-600 text-center text-sm">{t('groups.loadError')}</Text>
+              <Text className="text-ink-500 text-center text-xs">
+                {error instanceof Error ? error.message : String(error)}
               </Text>
-            </Pressable>
-          </Link>
+              <Button variant="secondary" onPress={() => refetch()}>
+                {t('groups.retry')}
+              </Button>
+            </View>
+          </HubSection>
+        ) : groupItems.length === 0 ? (
+          <HubSection title={t('hub.spacesTitle')}>
+            <EmptyState icon="👥" title={t('groups.emptyTitle')} message={t('groups.empty')} />
+          </HubSection>
+        ) : (
+          <HubIconCarousel
+            items={groupItems}
+            favoriteIds={groupFavorites.favorites}
+            onToggleFavorite={groupFavorites.toggle}
+          />
         )}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
 
-      <View className="absolute bottom-6 left-4 right-4">
-        <Button onPress={() => router.push('/(app)/groups/new')}>{t('groups.newGroup')}</Button>
+        <HubPersonalModules
+          favoriteIds={moduleFavorites.favorites}
+          onToggleFavorite={moduleFavorites.toggle}
+        />
+
+      </VerticalSwipeScroll>
+
+
+
+      <View
+
+        className="absolute bottom-0 left-0 right-0 bg-ink-50 border-t border-ink-100"
+
+        style={{ paddingBottom: insets.bottom }}
+
+        onLayout={onDockLayout}
+
+      >
+
+        <AdBanner placement="home" />
+
       </View>
+
+
+
+      <HubGroupFab canCreateGroup={canCreateGroup} bottomOffset={fabBottom} />
+
     </Screen>
+
   );
+
 }
+

@@ -1,0 +1,35 @@
+Short title (30 chars max)
+homeshared — shared home
+
+Full title
+homeshared: shopping, fridge & meal plans
+
+Short description (80 chars)
+Shared shopping lists, fridge and recipes for your household or flatmates.
+
+Full description
+homeshared makes household life easier:
+
+• **Shared shopping list** — everyone adds items, check off at the store, products sync to the virtual fridge.
+• **Group fridge** — see what you have, expiry dates and meal-plan reservations.
+• **Recipes & meal plan** — suggestions from your fridge, weekly meals, add missing ingredients in one tap.
+• **Household tasks** — split chores (optional per group).
+
+Create a personal space or a family / flatmate group, invite members, and stay in sync in real time.
+
+Free with non-intrusive ads. Child accounts supported.
+
+Privacy policy
+https://YOUR-DOMAIN.vercel.app/privacy
+
+Contact
+[Your support email]
+
+Suggested category
+Lifestyle
+
+Content rating
+Everyone
+
+Contains ads
+Yes

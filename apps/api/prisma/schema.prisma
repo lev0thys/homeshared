@@ -13,8 +13,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  /// Migrations Prisma : connexion directe (port 5432). En local = même URL que DATABASE_URL.
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 enum GroupRole {
@@ -23,27 +25,111 @@ enum GroupRole {
   MEMBER
 }
 
+enum TaskRecurrence {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum TaskStatus {
+  OPEN
+  CLAIMED
+  DONE
+}
+
+enum IngredientCategory {
+  VEGETABLE
+  FRUIT
+  DAIRY
+  MEAT
+  FISH
+  SEAFOOD
+  GRAIN
+  LEGUME
+  CONDIMENT
+  SPICE
+  OIL
+  BAKERY
+  OTHER
+}
+
+/// Catégorie cuisine / navigation catalogue recettes.
+enum RecipeCuisine {
+  FRENCH
+  ITALIAN
+  ASIAN
+  INDIAN
+  MEDITERRANEAN
+  MEXICAN
+  SEAFOOD
+  MEAT
+  VEGETARIAN
+  SOUP
+  SALAD
+  DESSERT
+  BREAKFAST
+  OTHER
+}
+
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+}
+
+/// Niveau de droit sur le planning repas du groupe.
+enum MealPlanPermission {
+  VIEW
+  EDIT_SLOT
+  EDIT_ALL
+}
+
+enum TaskSource {
+  MANUAL
+  MEAL_PREP
+  MEAL_COOK
+}
+
 model User {
   id          String   @id @default(uuid()) @db.Uuid
   email       String   @unique
   username    String   @unique
   displayName String
   avatarUrl   String?
+  /// Courte bio affichée sur le profil (280 car. max).
+  bio         String?
+  /// Compte enfant (créé par un parent ou marqué à l'inscription).
+  isChild     Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  memberships     Membership[]
-  ownedGroups     Group[]        @relation("GroupOwner")
-  addedItems      ShoppingItem[] @relation("ShoppingItemAddedBy")
-  purchasedItems  ShoppingItem[] @relation("ShoppingItemPurchasedBy")
-  createdInvites  Invite[]
+  memberships            Membership[]
+  ownedGroups            Group[]                 @relation("GroupOwner")
+  addedItems             ShoppingItem[]          @relation("ShoppingItemAddedBy")
+  purchasedItems         ShoppingItem[]          @relation("ShoppingItemPurchasedBy")
+  createdInvites         Invite[]
+  groupMessages          GroupMessage[]
+  recipeFavorites        RecipeFavorite[]
+  recipeProposalDismissals RecipeProposalDismiss[]
+  mealsPlanned           MealPlanEntry[]         @relation("MealPlannedBy")
+  mealsAssigned          MealPlanEntry[]         @relation("MealAssignedTo")
+  createdTasks           HouseholdTask[]         @relation("TaskCreatedBy")
+  claimedTasks           HouseholdTask[]         @relation("TaskClaimedBy")
+  assignedTasks          HouseholdTask[]         @relation("TaskAssignedTo")
 }
 
 model Group {
   id          String   @id @default(uuid()) @db.Uuid
   name        String
   description String?
+  /// Avatar du groupe (emoji:…, URL https ou data:image base64).
+  imageUrl    String?
   ownerId     String   @db.Uuid
+  /// Espace personnel auto-créé (une personne seule, sans invitation obligatoire).
+  isPersonal  Boolean  @default(false)
+  /// Modules actifs : SHOPPING, FRIDGE, RECIPES, TASKS, BARBECUE (futur).
+  features    String[] @default(["SHOPPING", "FRIDGE", "RECIPES"])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -52,8 +138,60 @@ model Group {
   shoppingItems ShoppingItem[]
   fridgeItems   FridgeItem[]
   invites       Invite[]
+  messages      GroupMessage[]
+  tasks         HouseholdTask[]
+  mealPlanEntries MealPlanEntry[]
+  mealSettings  GroupMealSettings?
+  memberMealGrants MemberMealGrant[]
+  memberMealRules  MemberMealRule[]
 
   @@index([ownerId])
+}
+
+model HouseholdTask {
+  id          String         @id @default(uuid()) @db.Uuid
+  groupId     String         @db.Uuid
+  title       String
+  description String?
+  recurrence  TaskRecurrence @default(ONCE)
+  status      TaskStatus     @default(OPEN)
+  source      TaskSource     @default(MANUAL)
+  /// Assignation directe par le titulaire (prioritaire sur « claim » libre).
+  assignedToId String?       @db.Uuid
+  mealPlanEntryId String?     @db.Uuid
+  reminderAt  DateTime?
+  createdById String         @db.Uuid
+  claimedById String?        @db.Uuid
+  claimedAt   DateTime?
+  completedAt DateTime?
+  dueDate     DateTime?
+  /// Durée estimée en minutes (optionnelle).
+  estimatedDurationMinutes Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  group     Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdBy User  @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  claimedBy User? @relation("TaskClaimedBy", fields: [claimedById], references: [id], onDelete: SetNull)
+  assignedTo User? @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  mealPlanEntry MealPlanEntry? @relation(fields: [mealPlanEntryId], references: [id], onDelete: SetNull)
+
+  @@index([groupId, status])
+  @@index([groupId, recurrence])
+  @@index([assignedToId])
+}
+
+model GroupMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  groupId   String   @db.Uuid
+  authorId  String   @db.Uuid
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  group  Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
 }
 
 model Membership {
@@ -61,10 +199,14 @@ model Membership {
   groupId  String    @db.Uuid
   userId   String    @db.Uuid
   role     GroupRole @default(MEMBER)
+  /// Membre traité comme enfant dans ce groupe (UX simplifiée).
+  isChild  Boolean   @default(false)
   joinedAt DateTime  @default(now())
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealGrants MemberMealGrant[]
+  mealRules  MemberMealRule[]
 
   @@unique([groupId, userId])
   @@index([userId])
@@ -124,29 +266,158 @@ model FridgeItem {
 }
 
 model Recipe {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String        @id @default(uuid()) @db.Uuid
+  slug         String?       @unique
   title        String
   description  String?
-  instructions String   @db.Text
-  prepMinutes  Int      @default(0)
-  cookMinutes  Int      @default(0)
-  servings     Int      @default(2)
+  instructions String        @db.Text
+  prepMinutes  Int           @default(0)
+  cookMinutes  Int           @default(0)
+  servings     Int           @default(2)
   imageUrl     String?
-  createdAt    DateTime @default(now())
+  cuisine      RecipeCuisine @default(OTHER)
+  createdAt    DateTime      @default(now())
 
   ingredients RecipeIngredient[]
+  favorites   RecipeFavorite[]
+  mealPlans   MealPlanEntry[]
+  proposalDismissals RecipeProposalDismiss[]
+}
+
+model RecipeFavorite {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  recipeId  String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recipeId])
+  @@index([userId])
+}
+
+/// Catalogue canonique d'ingrédients (aliases pour matching frigo ↔ recettes).
+model Ingredient {
+  id          String             @id @default(uuid()) @db.Uuid
+  slug        String             @unique
+  nameFr      String
+  nameEn      String?
+  category    IngredientCategory @default(OTHER)
+  defaultUnit String?
+  aliases     String[]
+  createdAt   DateTime           @default(now())
+
+  recipeLines RecipeIngredient[]
+
+  @@index([category])
 }
 
 model RecipeIngredient {
-  id       String  @id @default(uuid()) @db.Uuid
-  recipeId String  @db.Uuid
-  name     String
-  quantity Decimal @db.Decimal(10, 2)
-  unit     String?
-  optional Boolean @default(false)
+  id           String  @id @default(uuid()) @db.Uuid
+  recipeId     String  @db.Uuid
+  ingredientId String  @db.Uuid
+  quantity     Decimal @db.Decimal(10, 2)
+  unit         String?
+  optional     Boolean @default(false)
+  notes        String?
 
-  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
 
   @@index([recipeId])
-  @@index([name])
+  @@index([ingredientId])
+}
+
+/// Repas planifié — une entrée par groupe / semaine / créneau.
+model MealPlanEntry {
+  id             String   @id @default(uuid()) @db.Uuid
+  groupId        String   @db.Uuid
+  plannedById    String   @db.Uuid
+  assignedToId   String?  @db.Uuid
+  weekStart      DateTime @db.Date
+  dayOfWeek      Int
+  mealSlot       MealSlot
+  recipeId       String   @db.Uuid
+  /// Portions pour ce repas (null = réglage groupe de la semaine).
+  servings       Int?
+  cookedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  group      Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  plannedBy  User   @relation("MealPlannedBy", fields: [plannedById], references: [id], onDelete: Restrict)
+  assignedTo User?  @relation("MealAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  recipe     Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tasks      HouseholdTask[]
+
+  @@unique([groupId, weekStart, dayOfWeek, mealSlot])
+  @@index([groupId, weekStart])
+  @@index([groupId, cookedAt])
+}
+
+/// Heures repas + sync tâches (1 par groupe).
+model GroupMealSettings {
+  groupId            String  @id @db.Uuid
+  breakfastTime      String  @default("08:00")
+  lunchTime          String  @default("12:30")
+  dinnerTime         String  @default("19:30")
+  syncTasksToList    Boolean @default(true)
+  allowTaskProposals Boolean @default(true)
+  showBreakfast      Boolean @default(true)
+  showLunch          Boolean @default(true)
+  showDinner         Boolean @default(true)
+  /// Si true, adultEaters = nombre de membres du groupe (surchargeable).
+  servingsFromMemberCount Boolean @default(true)
+  adultEaters        Int     @default(2)
+  childEaters        Int     @default(0)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+/// Droit explicite d'un membre sur le planning (configuré par OWNER).
+model MemberMealGrant {
+  id           String             @id @default(uuid()) @db.Uuid
+  groupId      String             @db.Uuid
+  membershipId String             @db.Uuid
+  permission   MealPlanPermission
+  dayOfWeek    Int?
+  mealSlot     MealSlot?
+
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([membershipId])
+  @@index([groupId])
+}
+
+/// Règle auto : membre X = créneaux fixes (ex. lundi–mardi midi).
+model MemberMealRule {
+  id             String    @id @default(uuid()) @db.Uuid
+  groupId        String    @db.Uuid
+  membershipId   String    @db.Uuid
+  dayOfWeek      Int
+  mealSlot       MealSlot?
+  createReminder Boolean   @default(true)
+
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([membershipId, dayOfWeek])
+}
+
+/// Pénalité propositions : vues sans sélection → moins de réapparition.
+model RecipeProposalDismiss {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  recipeId  String   @db.Uuid
+  viewCount Int      @default(1)
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recipeId])
+  @@index([userId])
 }
