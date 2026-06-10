@@ -3,25 +3,22 @@
 ## 📌 État actuel
 
 - **API prod** : https://homeshared-api.fly.dev — OK (**rate limit déployé** via `fly deploy`)
-- **Web Vercel** : https://homeshared.vercel.app — **page blanche corrigée localement** (fix Metro React dupliqué) → **redeploy Vercel requis**
+- **Web Vercel** : https://homeshared.vercel.app — **OK** (fix React dupliqué + redeploy prod)
 - **Google OAuth** : OK (Supabase + Google Cloud configurés)
-- **EAS APK** : **OK** build `34877760` — [APK direct](https://expo.dev/artifacts/eas/7udEVm79nmJ2hjmFdcj16z.apk) · `/download` sur Vercel
+- **EAS APK** : **OK** build `34877760` — [APK direct](https://expo.dev/artifacts/eas/7udEVm79nmJ2hjmFdcj16z.apk) · `/download.apk` sur Vercel
 - **Doc état** : `export/DEPLOIEMENT-ETAT.md`
-- **Prochaine étape** : redeploy Vercel (`pnpm build:web` + push ou redeploy dashboard) ; commit fix Metro si souhaité
+- **Validation Steve (2026-06-10)** : parcours v1 OK (hors APK à tester) — seul point UX reporté v2 : latence cocher article courses
+- **Prochaine étape** : clôture v1 (tag) ou atelier plan v2 ; test APK device
 
 ---
 
-## 2026-06-09 (fix page blanche web Vercel)
+## 2026-06-09 (deploy prod web + APK Vercel)
 
 ### Fait
-- [x] Diagnostic Playwright : crash JS `Cannot read properties of null (reading 'useMemo')` — **double instance React** (Metro résolvait `react` depuis `packages/tech-bricks-ads/node_modules`)
-- [x] Fix `apps/mobile/metro.config.js` : alias `react` / `react-dom` / jsx-runtime vers le hoisted root + `disableHierarchicalLookup: true`
-- [x] `.npmrc` : hoist `react` / `react-dom`
-- [x] Garde-fou session : `.catch()` sur `getSession()` dans `app/_layout.tsx` (évite spinner infini si Supabase échoue)
-- [x] Build web local validé : écran login visible, redirect `/login`, zéro erreur console
-
-### En cours
-- [ ] Redeploy Vercel pour appliquer le fix en prod
+- [x] Script `scripts/fetch-apk-for-vercel.mjs` — télécharge l'APK EAS au build Vercel (~81 Mo)
+- [x] `vercel.json` buildCommand mis à jour ; commit `32ae13a` + lockfile `51e2136` push `dev`
+- [x] **Deploy Vercel prod** — alias https://homeshared.vercel.app (bundle `entry-72327849…`)
+- [x] `/download.apk` servi depuis Vercel ; page `/download` + login web opérationnels
 
 ---
 

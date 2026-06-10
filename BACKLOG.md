@@ -79,6 +79,14 @@
 
 ## v2 (post-v1)
 
+### [v2] Courses — cocher « dans le caddie » en optimistic UI (zéro latence perçue)
+- **Description courte** : Au tap sur un article, l’UI bascule **immédiatement** (coché / section « fait ») ; la synchro serveur (`POST /purchase` + frigo) se fait en arrière-plan. Rollback + toast si échec.
+- **Complexité** : 4/10
+- **Valeur estimée** : 🟢 forte (parcours le plus fréquent en magasin)
+- **Notes techniques** : aujourd’hui `shopping.tsx` attend la mutation puis `invalidateQueries` (shopping + fridge + recipes-match) → latence réseau visible. Pattern TanStack Query `onMutate` + `setQueryData` optimiste ; même logique pour `unpurchase`, `purchase-all` ; conflit realtime (autre membre) = merge ou refresh léger. API inchangée (transaction achat → frigo déjà côté serveur).
+- **Remontée par** : Steve — validé v1 sauf APK ; reporté volontairement en v2.
+- **Ajoutée le** : 2026-06-10
+
 ### [v2] Calendrier saison aligné Manger Bouger + régions
 - **Description courte** : Enrichir `season.produce.ts` (cresson, oseille, blettes…), script d’audit mensuel automatisé, profils Nord/Sud/Méditerranée.
 - **Complexité** : 5/10
