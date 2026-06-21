@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { redirectAfterAuth } from '@/lib/post-auth-redirect';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -43,7 +44,7 @@ export default function AuthCallbackScreen() {
           throw new Error('Session introuvable après connexion Google.');
         }
 
-        if (!cancelled) router.replace('/(app)');
+        if (!cancelled) await redirectAfterAuth();
       } catch (e) {
         if (cancelled) return;
         const message = e instanceof Error ? e.message : 'Erreur de connexion Google.';

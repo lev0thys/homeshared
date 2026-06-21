@@ -2,7 +2,7 @@
 
 ## Scope
 
-Application multi-plateforme (Android natif + Web + iOS PWA) permettant à des
+Application multi-plateforme (Android + iOS natifs + Web PWA) permettant à des
 utilisateurs de créer des **groupes** (foyer, colocs, famille…) et de partager
 en leur sein du contenu collaboratif :
 
@@ -19,7 +19,7 @@ Les autres modules (cartes de fidélité, tickets OCR, etc.) sont en backlog.
 ## Public cible
 
 - Foyers francophones (langue principale FR, EN beta).
-- Mobile Android en priorité, web / PWA iOS en complément.
+- Mobile Android en priorité, **iOS App Store** dès que la v2 est validée (compte Apple Developer 1 an — Steve, mai 2026), web / PWA en complément.
 - Modèle économique : freemium léger + bannières AdMob (non bloquantes).
 
 ## Stack
@@ -54,7 +54,8 @@ Les autres modules (cartes de fidélité, tickets OCR, etc.) sont en backlog.
 - [x] Polish UI : icônes, loader states, error states, vide states (itérations continues)
 - [ ] Build web PWA déployé (Vercel) — config prête : `docs/DEPLOYMENT.md` + `vercel.json`
 - [ ] APK Android signé téléchargeable — EAS `preview` / page `/download`
-- [ ] Play Store publié — EAS `production` + `play-store/descriptions/`
+- [ ] Play Store publié — **quand version affinée** (Steve : fiches + captures à ce moment-là ; EAS `production` déjà prévu)
+- [ ] App Store iOS publié — **idem, pas urgent** (compte Apple Developer 1 an en réserve ; App Store Connect + fiche au moment voulu)
 - [x] Intégration brique `@tech-bricks/ads` (bannière + UMP consent)
 
 ## Hors-scope v1 (→ BACKLOG.md)
@@ -64,7 +65,7 @@ Les autres modules (cartes de fidélité, tickets OCR, etc.) sont en backlog.
 - Notifications push
 - Mode offline complet avec sync
 - Magic link auth
-- App Store iOS (juste PWA pour l'instant)
+- ~~App Store iOS~~ → **cible post-v2** (compte Apple Developer actif ; voir BACKLOG)
 - Recettes communautaires modérées
 - Photos de plats
 

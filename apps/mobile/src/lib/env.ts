@@ -18,6 +18,7 @@ export const env = {
   SUPABASE_ANON_KEY: readEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY'),
   SITE_URL: readEnv('EXPO_PUBLIC_SITE_URL'),
   PLAY_STORE_URL: readEnv('EXPO_PUBLIC_PLAY_STORE_URL'),
+  APP_STORE_ID: readEnv('EXPO_PUBLIC_APP_STORE_ID'),
   APK_URL: readEnv('EXPO_PUBLIC_APK_URL'),
   ADMOB_ANDROID_APP_ID: readEnv('EXPO_PUBLIC_ADMOB_ANDROID_APP_ID'),
   ADMOB_BANNER_ID: readEnv('EXPO_PUBLIC_ADMOB_BANNER_ID'),
@@ -28,6 +29,8 @@ export const env = {
   /** true en dev par défaut ; en prod passer EXPO_PUBLIC_ADS_CONSENT=true après bandeau RGPD. */
   ADS_CONSENT_GRANTED:
     readEnv('EXPO_PUBLIC_ADS_CONSENT') === 'true' || __DEV__,
+  /** Bouton « Essayer le GPS » hors filtre données communautaires. */
+  STORE_MODE_DEV: readEnv('EXPO_PUBLIC_STORE_MODE_DEV') === 'true',
 };
 
 export function isSupabaseConfigured(): boolean {

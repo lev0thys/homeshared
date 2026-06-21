@@ -10,6 +10,12 @@ import { supabase } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 import { useSessionStore } from '@/stores/session.store';
 import { initAppAds } from '@/lib/ads-init';
+import { useShoppingTripAutoCommit } from '@/hooks/useShoppingTripAutoCommit';
+
+function AppShell() {
+  useShoppingTripAutoCommit();
+  return <Slot />;
+}
 
 export default function RootLayout() {
   const setSession = useSessionStore((s) => s.setSession);
@@ -35,7 +41,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <Slot />
+          <AppShell />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

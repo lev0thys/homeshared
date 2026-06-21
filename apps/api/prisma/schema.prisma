@@ -115,8 +115,10 @@ model User {
   mealsPlanned           MealPlanEntry[]         @relation("MealPlannedBy")
   mealsAssigned          MealPlanEntry[]         @relation("MealAssignedTo")
   createdTasks           HouseholdTask[]         @relation("TaskCreatedBy")
-  claimedTasks           HouseholdTask[]         @relation("TaskClaimedBy")
-  assignedTasks          HouseholdTask[]         @relation("TaskAssignedTo")
+  claimedTasks             HouseholdTask[]           @relation("TaskClaimedBy")
+  assignedTasks            HouseholdTask[]           @relation("TaskAssignedTo")
+  storeContributionBatches StoreContributionBatch[]
+  contributorTrust         ContributorTrust?
 }
 
 model Group {
@@ -420,4 +422,56 @@ model RecipeProposalDismiss {
 
   @@unique([userId, recipeId])
   @@index([userId])
+}
+
+/// Contributions communautaires mode magasin (batch à validation).
+enum StoreContributionType {
+  FOUND
+  POSITION_FIX
+  OUT_OF_STOCK
+  WRONG_PLACEMENT
+  LAYOUT_FEEDBACK
+}
+
+model StoreContributionBatch {
+  id               String   @id @default(uuid()) @db.Uuid
+  storeOsmId       BigInt
+  userId           String   @db.Uuid
+  layoutProfile    String?
+  sessionStartedAt DateTime
+  submittedAt      DateTime @default(now())
+
+  user   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events StoreContributionEvent[]
+
+  @@index([storeOsmId, submittedAt])
+  @@index([userId])
+}
+
+model StoreContributionEvent {
+  id                  String                @id @default(uuid()) @db.Uuid
+  batchId             String                @db.Uuid
+  type                StoreContributionType
+  productFingerprint  String?
+  aisle               String?
+  schematicX          Float?
+  schematicY          Float?
+  disputedFingerprint String?
+
+  batch StoreContributionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([type, productFingerprint])
+}
+
+/// Score de confiance interne (jamais exposé à l'utilisateur).
+model ContributorTrust {
+  userId            String   @id @db.Uuid
+  trustScore        Float    @default(50)
+  contributionCount Int      @default(0)
+  alignedCount      Int      @default(0)
+  outlierCount      Int      @default(0)
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { isSupabaseConfigured } from '@/lib/env';
+import { isStoreModeActiveForGroup } from '@/hooks/store-mode/useStoreModeQueryPolicy';
 
 interface RealtimeTableConfig {
   table: string;
@@ -45,7 +46,7 @@ const GROUP_REALTIME_TABLES: RealtimeTableConfig[] = [
 
 /**
  * Invalide les queries TanStack Query quand un autre membre modifie courses, frigo, planning, etc.
- * Nécessite Realtime activé sur les tables dans Supabase (voir docs/REALTIME-SETUP.md).
+ * En mode magasin : pas d'invalidation (snapshot local, sync à la sortie).
  */
 export function useGroupRealtime(groupId: string | undefined): void {
   const qc = useQueryClient();
@@ -67,6 +68,7 @@ export function useGroupRealtime(groupId: string | undefined): void {
             filter: `groupId=eq.${groupId}`,
           },
           () => {
+            if (isStoreModeActiveForGroup(groupId)) return;
             for (const query of invalidate(groupId)) {
               void qc.invalidateQueries(query);
             }

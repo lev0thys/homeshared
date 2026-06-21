@@ -20,6 +20,7 @@ import { storesRoutes } from './routes/stores.routes.js';
 import { chatRoutes } from './routes/chat.routes.js';
 import { tasksRoutes } from './routes/tasks.routes.js';
 import { mealPlanRoutes } from './routes/meal-plan.routes.js';
+import { invitePublicRoutes } from './routes/invite-public.routes.js';
 
 export async function buildServer() {
   const app = Fastify({
@@ -58,6 +59,7 @@ export async function buildServer() {
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(usersRoutes, { prefix: '/api/users' });
   await app.register(groupsRoutes, { prefix: '/api/groups' });
+  await app.register(invitePublicRoutes, { prefix: '/api/invites' });
   await app.register(shoppingRoutes, { prefix: '/api/shopping' });
   await app.register(fridgeRoutes, { prefix: '/api/fridge' });
   await app.register(recipesRoutes, { prefix: '/api/recipes' });

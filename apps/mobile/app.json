@@ -17,7 +17,25 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0f172a"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "homeshared.vercel.app",
+              "pathPrefix": "/join"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.steve.homeshared",
+      "associatedDomains": ["applinks:homeshared.vercel.app"]
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +54,12 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "homeshared utilise votre position pour détecter le magasin où vous faites les courses."
+        }
+      ],
       [
         "expo-image-picker",
         {

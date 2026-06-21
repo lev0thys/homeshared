@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Platform } from 'react-native';
-import { router } from 'expo-router';
+import { redirectAfterAuth } from '@/lib/post-auth-redirect';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/Button';
 import { signInWithGoogle } from '@/lib/google-auth';
@@ -26,7 +26,7 @@ export function GoogleAuthButton({ onError }: GoogleAuthButtonProps) {
       if (result.redirecting && Platform.OS === 'web') {
         return;
       }
-      router.replace('/(app)');
+      await redirectAfterAuth();
     } catch (e) {
       onError?.(formatAuthError({ message: e instanceof Error ? e.message : 'Erreur réseau' }));
     } finally {

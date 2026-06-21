@@ -21,7 +21,7 @@ export function HubGroupFab({ canCreateGroup, bottomOffset }: HubGroupFabProps) 
       key: 'join',
       label: t('groups.joinGroup'),
       icon: '🔗',
-      onPress: () => router.push('/(app)/join' as never),
+      onPress: () => router.push('/join' as never),
     },
     {
       key: 'new',

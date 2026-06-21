@@ -28,10 +28,19 @@ import { ChecklistToggle } from '@/components/ChecklistToggle';
 import { ShoppingManagePanel } from '@/components/shopping/ShoppingManagePanel';
 import { ShoppingAisleSectionHeader } from '@/components/shopping/ShoppingAisleSectionHeader';
 import { api } from '@/lib/api-client';
+import { scheduleDeferredShoppingSideEffects } from '@/lib/debounced-query-invalidation';
+import { shoppingQueryOptions } from '@/lib/query-options';
 import { useMutationError } from '@/hooks/useMutationError';
+import { useOptimisticPurchase } from '@/hooks/useOptimisticPurchase';
 import { useGroupId } from '@/hooks/useGroupId';
 import { useUserCapabilities } from '@/hooks/useUserCapabilities';
 import { useSessionStore } from '@/stores/session.store';
+import { useStartStoreMode } from '@/hooks/store-mode/useStartStoreMode';
+import { useLastStoreGpsReadiness } from '@/hooks/store-mode/useLastStoreGpsReadiness';
+import { StorePickerSheet } from '@/components/store-mode/StorePickerSheet';
+import { isStoreModeDevEnabled } from '@/lib/store-mode-dev';
+import { updateShoppingTripProgress, clearShoppingTripWatch } from '@/lib/shopping-trip-watch';
+import { STORE_GPS_MIN_BATCH_COUNT, getStoreMappingProgress } from '@homeshared/shared';
 
 interface ShoppingItemRow {
   id: string;
@@ -74,6 +83,9 @@ export default function ShoppingListScreen() {
   const { error, capture, clearError } = useMutationError();
   const sessionUserId = useSessionStore((s) => s.user?.id);
   const { canManageShopping } = useUserCapabilities(groupId, sessionUserId);
+  const storeModeLaunch = useStartStoreMode({ groupId: groupId ?? '' });
+  const lastStoreGps = useLastStoreGpsReadiness();
+  const showDevStorePreview = isStoreModeDevEnabled();
 
   const {
     data: items,
@@ -85,6 +97,7 @@ export default function ShoppingListScreen() {
     queryFn: (): Promise<ShoppingItemRow[]> =>
       api.get<ShoppingItemRow[]>(`/api/shopping/${groupId}`),
     enabled: !!groupId,
+    ...shoppingQueryOptions,
   });
 
   const addMutation = useMutation({
@@ -107,25 +120,12 @@ export default function ShoppingListScreen() {
     onError: (err) => capture(err),
   });
 
-  const purchaseMutation = useMutation({
-    mutationFn: (itemId: string) => api.post(`/api/shopping/${itemId}/purchase`, {}),
-    onSuccess: () => {
-      clearError();
-      qc.invalidateQueries({ queryKey: ['shopping', groupId] });
-      qc.invalidateQueries({ queryKey: ['fridge', groupId] });
-      qc.invalidateQueries({ queryKey: ['recipes-match', groupId] });
-    },
-    onError: (err) => capture(err),
-  });
-
-  const unpurchaseMutation = useMutation({
-    mutationFn: (itemId: string) => api.post(`/api/shopping/${itemId}/unpurchase`, {}),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['shopping', groupId] });
-      qc.invalidateQueries({ queryKey: ['fridge', groupId] });
-      qc.invalidateQueries({ queryKey: ['recipes-match', groupId] });
-    },
-    onError: (err) => capture(err),
+  const { togglePurchased } = useOptimisticPurchase({
+    groupId: groupId!,
+    storeMode: false,
+    onError: capture,
+    purchaseFn: (itemId) => api.post(`/api/shopping/${itemId}/purchase`, {}),
+    unpurchaseFn: (itemId) => api.post(`/api/shopping/${itemId}/unpurchase`, {}),
   });
 
   const updateQtyMutation = useMutation({
@@ -154,9 +154,8 @@ export default function ShoppingListScreen() {
     mutationFn: () => api.post(`/api/shopping/${groupId}/purchase-all`, {}),
     onSuccess: () => {
       clearError();
-      qc.invalidateQueries({ queryKey: ['shopping', groupId] });
-      qc.invalidateQueries({ queryKey: ['fridge', groupId] });
-      qc.invalidateQueries({ queryKey: ['recipes-match', groupId] });
+      void qc.invalidateQueries({ queryKey: ['shopping', groupId] });
+      scheduleDeferredShoppingSideEffects(qc, groupId!);
     },
     onError: (err) => capture(err),
   });
@@ -166,7 +165,9 @@ export default function ShoppingListScreen() {
       api.post(`/api/shopping/${groupId}/finalize`, { discardUnpurchased }),
     onSuccess: () => {
       clearError();
+      if (groupId) void clearShoppingTripWatch();
       qc.invalidateQueries({ queryKey: ['shopping', groupId] });
+      scheduleDeferredShoppingSideEffects(qc, groupId!);
     },
     onError: (err) => capture(err),
   });
@@ -215,6 +216,11 @@ export default function ShoppingListScreen() {
   const allItems = items ?? [];
   const pendingItems = allItems.filter((i: ShoppingItemRow) => !i.purchasedAt);
   const doneItems = allItems.filter((i: ShoppingItemRow) => i.purchasedAt);
+
+  useEffect(() => {
+    if (!groupId || allItems.length === 0) return;
+    void updateShoppingTripProgress(groupId, doneItems.length, allItems.length);
+  }, [groupId, allItems.length, doneItems.length]);
 
   useEffect(() => {
     setPanelTouched(false);
@@ -316,9 +322,9 @@ export default function ShoppingListScreen() {
     updateQtyMutation.mutate({ itemId, quantity: q });
   }
 
-  function togglePurchased(item: ShoppingItemRow) {
-    if (item.purchasedAt) unpurchaseMutation.mutate(item.id);
-    else purchaseMutation.mutate(item.id);
+  function togglePurchasedItem(item: ShoppingItemRow) {
+    clearError();
+    togglePurchased(item);
   }
 
   const managePanelContent = (
@@ -327,8 +333,43 @@ export default function ShoppingListScreen() {
         <ListProgressBar done={doneItems.length} total={allItems.length} />
       ) : null}
 
+      {doneItems.length > 0 && !selectionMode ? (
+        <Text className="text-xs text-ink-500 text-center px-1">{t('shopping.cartHint')}</Text>
+      ) : null}
+
       {pendingItems.length > 0 ? (
         <Text className="text-xs text-ink-500 text-center px-1">{t('shopping.aisleOrderHint')}</Text>
+      ) : null}
+
+      {pendingItems.length > 0 && !selectionMode ? (
+        <Button onPress={() => void storeModeLaunch.startMapping()}>
+          {t('storeMode.startMapping')}
+        </Button>
+      ) : null}
+
+      {pendingItems.length > 0 && !selectionMode && lastStoreGps.gpsReady ? (
+        <Button onPress={() => void storeModeLaunch.start()}>
+          {t('storeMode.start')}
+        </Button>
+      ) : null}
+
+      {pendingItems.length > 0 && !selectionMode && lastStoreGps.mappingPhase && lastStoreGps.hasLastStore ? (
+        <View className="bg-amber-50 border border-amber-100 rounded-xl px-3 py-3">
+          <Text className="text-sm font-medium text-amber-900">{t('storeMode.mappingProgressTitle')}</Text>
+          <Text className="text-xs text-amber-800 mt-1 leading-5">
+            {t('storeMode.mappingProgressBody', {
+              current: lastStoreGps.batchCount,
+              target: STORE_GPS_MIN_BATCH_COUNT,
+              remaining: getStoreMappingProgress(lastStoreGps.batchCount).remaining,
+            })}
+          </Text>
+        </View>
+      ) : null}
+
+      {pendingItems.length > 0 && !selectionMode && showDevStorePreview ? (
+        <Button variant="secondary" onPress={() => void storeModeLaunch.startDevPreview()}>
+          {t('storeMode.devPreview')}
+        </Button>
       ) : null}
 
       {canManageShopping ? (
@@ -532,7 +573,7 @@ export default function ShoppingListScreen() {
                   ) : (
                     <ChecklistToggle
                       checked={isPurchased}
-                      onPress={() => togglePurchased(item)}
+                      onPress={() => togglePurchasedItem(item)}
                       accessibilityLabel={
                         isPurchased ? t('shopping.uncheck') : t('shopping.markPurchased')
                       }
@@ -648,6 +689,19 @@ export default function ShoppingListScreen() {
           )}
         </View>
       )}
+      <StorePickerSheet
+        visible={storeModeLaunch.pickerVisible}
+        loading={storeModeLaunch.loading}
+        stores={storeModeLaunch.stores}
+        locationDenied={storeModeLaunch.locationDenied}
+        noGpsReadyStores={storeModeLaunch.noGpsReadyStores}
+        allowGeneric={storeModeLaunch.allowGeneric}
+        lastStoreName={storeModeLaunch.lastStoreName}
+        lastStoreOsmId={storeModeLaunch.lastStoreOsmId}
+        lastLayoutProfile={storeModeLaunch.lastLayoutProfile}
+        onClose={storeModeLaunch.closePicker}
+        onConfirm={storeModeLaunch.confirmPicker}
+      />
     </Screen>
   );
 }

@@ -24,6 +24,10 @@ export const acceptInviteSchema = z.object({
   token: z.string().min(10),
 });
 
+export const previewInviteQuerySchema = z.object({
+  token: z.string().min(10),
+});
+
 export const updateMembershipSchema = z.object({
   isChild: z.boolean(),
 });
@@ -32,4 +36,5 @@ export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;
 export type CreateInviteInput = z.infer<typeof createInviteSchema>;
 export type AcceptInviteInput = z.infer<typeof acceptInviteSchema>;
+export type PreviewInviteQuery = z.infer<typeof previewInviteQuerySchema>;
 export type UpdateMembershipInput = z.infer<typeof updateMembershipSchema>;

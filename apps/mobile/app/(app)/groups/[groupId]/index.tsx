@@ -3,7 +3,7 @@ import { VerticalSwipeScroll } from '@/components/VerticalSwipeScroll';
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { DEFAULT_GROUP_FEATURES } from '@homeshared/shared';
+import { DEFAULT_GROUP_FEATURES, buildInviteWebUrl } from '@homeshared/shared';
 import { Screen } from '@/components/Screen';
 import { Button } from '@/components/Button';
 import { LoadingCenter } from '@/components/LoadingCenter';
@@ -16,6 +16,7 @@ import { GroupQuickActions } from '@/components/GroupQuickActions';
 import { GroupStatusStrip } from '@/components/GroupStatusStrip';
 import { UserAvatar } from '@/components/UserAvatar';
 import { useSessionStore } from '@/stores/session.store';
+import { env } from '@/lib/env';
 
 interface GroupDetail {
   id: string;
@@ -53,8 +54,12 @@ export default function GroupHomeScreen() {
     },
     onSuccess: async (invite) => {
       clearError();
+      const inviteUrl = buildInviteWebUrl(env.SITE_URL, invite.token);
+      const message = `${t('invite.shareMessage')}\n${inviteUrl}`;
       await Share.share({
-        message: `${t('invite.shareMessage')}\n${invite.token}`,
+        message,
+        url: inviteUrl,
+        title: t('invite.shareTitle'),
       });
     },
     onError: (err) => capture(err),

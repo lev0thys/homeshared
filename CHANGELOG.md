@@ -4,6 +4,51 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), SemVer.
 
 ## [Unreleased]
 
+### v2 — Carte magasin (polish)
+- **Carte plein slot** : `fitViewBoxToViewport` — plus de bandes vides / plan miniature sur web.
+- **Rendu carto** : couloirs crème, gondoles au mètre, îlots allée transparents, échelle 1 m / 5 m.
+- **UX** : centrage ◎ (barre + flottant), fiche `!` magasin inconnu, sélecteur plan retiré de l’écran principal.
+- **Tests** : `store-map-viewport.test.ts` (3).
+
+### v2 — mode magasin (fondation)
+- **RLS Supabase** : script `supabase/rls/001_enable_rls.sql` + `pnpm rls:apply` — tables protégées, email/token isolés.
+- **Package `@homeshared/store-navigation`** : layouts 2D, calcul de route par rayons, tests.
+- **Mode magasin** : bouton « Je suis au magasin », plan schématique SVG, parcours rayon par rayon.
+- **Optimistic UI** : cocher article sans attendre le réseau (`useOptimisticPurchase`).
+
+### v2 — PDR + contributions communautaires
+- **BDD** : modèles `StoreContributionBatch`, `StoreContributionEvent`, `ContributorTrust`.
+- **API** : `GET/POST /api/stores/contributions` — agrégats pondérés, détection magasin pionnier, rate limits batch.
+- **Mobile** : `usePdrSession` (podomètre), `useContributionDraft`, `useStoreSession`, bandeau pionnier, long-press recalage, signalement rupture.
+
+### v2 — Perf (bloc 6)
+- **Cache local** : `lib/local-cache/` — contributions 15 min, Overpass 24 h, layout 7 j.
+- **Snapshot mode magasin** : liste figée à l'entrée, zéro refetch shopping pendant la session.
+- **Invalidations ciblées** : debounce 2 s fridge/recipes hors mode magasin ; realtime suspendu en magasin.
+- **API** : `Cache-Control` sur agrégats contributions.
+
+### v2 — Bloc 3 géoloc magasin
+- **GPS** : permission foreground `expo-location` au lancement mode magasin.
+- **Overpass** : POI `shop=supermarket|convenience|grocery` dans 500 m, cache local 24 h.
+- **Choix magasin** : sheet avec liste, auto-sélection si un seul POI ≤ 80 m, reprise dernier magasin.
+- **Profil layout** : heuristique enseigne OSM → hyper / super / proxi.
+- **Session** : `storeOsmId` réel + coordonnées entrée pour contributions communautaires.
+
+### v2 — Maps de base auto (GPS → type magasin)
+- **Détection enrichie** : `inferLayoutProfileDetailed` (Carrefour Market/City, Lidl, Monoprix, Super U, etc.) + niveau de confiance.
+- **Métadonnées plans** : `getLayoutProfileMeta` — description et parcours type par profil.
+- **Aperçus visuels** : miniatures SVG hyper/super/proxi dans le picker et le switcher.
+- **Switcher en session** : ajuster le plan si la détection est incorrecte (persisté par magasin).
+- **Auto-pick amélioré** : sélection du plus proche si ≤ 80 m ou clairement devant le 2e candidat.
+- **Carte enrichie** : badge type sur le plan, pins orange des emplacements communautaires.
+- **UX test** : changer de magasin depuis le mode magasin, coords GPS affichées, confirmation envoi contributions.
+
+### Corrigé (v2 stabilisation)
+- **PDR** : dépendances React stabilisées (`recalibrate` au lieu de l’objet `pdr` entier) — plus de boucle de recalage.
+- **CI locale** : `scripts/verify-local.mjs` + `pnpm verify` fiables sous Windows.
+- **Tests** : +8 tests (PDR polyline, productFingerprint, contributions service).
+- **RLS Supabase v2** : `002_v2_contributions_rls.sql` + `003_auth_initplan.sql` ; `pnpm rls:apply` exécute les 3 scripts.
+
 ### Ajouté (publication web + Play Store)
 - **Guide déploiement** : `docs/DEPLOYMENT.md` (API Fly.io, site Vercel, Play Store EAS).
 - **API Docker** : `Dockerfile` + `fly.toml` pour hébergement production.

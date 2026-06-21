@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Switch, Text, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
+import { redirectAfterAuth } from '@/lib/post-auth-redirect';
 import { useTranslation } from 'react-i18next';
 import { signupSchema } from '@homeshared/shared';
 import { Screen } from '@/components/Screen';
@@ -38,7 +39,7 @@ export default function SignupScreen() {
         setError(formatAuthError({ message: result.message }));
         return;
       }
-      router.replace('/(app)');
+      await redirectAfterAuth();
     } catch (e) {
       setError(formatAuthError({ message: e instanceof Error ? e.message : 'Erreur réseau' }));
     } finally {

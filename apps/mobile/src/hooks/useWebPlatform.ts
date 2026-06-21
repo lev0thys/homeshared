@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 export type WebPlatform = 'android' | 'ios' | 'desktop' | 'unknown';
 
-function detectWebPlatform(): WebPlatform {
+export function detectWebPlatform(): WebPlatform {
   if (Platform.OS !== 'web' || typeof navigator === 'undefined') return 'unknown';
   const ua = navigator.userAgent.toLowerCase();
   if (/android/.test(ua)) return 'android';

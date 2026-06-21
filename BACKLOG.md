@@ -51,12 +51,25 @@
 - **Notes techniques** : NativeWind supporte dark via `dark:` modifier.
 - **Ajoutée le** : 2026-05-26
 
-### [v1.2] Edition / suppression d'items frigo via UI
+### [v1.x] Edition / suppression d'items frigo via UI
 - **Description courte** : Écran de détail frigo avec édition quantité, date d'expiration, consommation.
 - **Complexité** : 3/10
 - **Valeur estimée** : 🟡 moyenne
 - **Notes techniques** : API déjà prête, juste UI.
 - **Ajoutée le** : 2026-05-26
+
+### [post-v2] Publication App Store iOS (compte Apple Developer 1 an)
+- **Description courte** : Soumettre homeshared sur l’App Store — **pas avant une version bien polie** (Steve décide du timing ; compte dev déjà payé pour anticiper).
+- **Complexité** : 4/10 (première fois) · 2/10 (mises à jour suivantes)
+- **Valeur estimée** : 🟢 forte (iOS natif + pubs AdMob iOS, plus de PWA seule)
+- **Notes techniques** :
+  - Compte **Apple Developer** actif (Steve, mai 2026).
+  - `eas.json` : ajouter profil `ios` production ; credentials EAS + App Store Connect.
+  - Dossier `app-store/` (captures 6.7", description FR/EN, politique confidentialité URL).
+  - **Review Apple** : justifier `expo-location` (foreground, mode magasin) dans les notes de review — pas de background GPS en v2.
+  - AdMob : unités iOS + `GADApplicationIdentifier` dans `Info.plist` (plugin ads).
+  - PWA reste un canal gratuit ; App Store = canal principal iOS.
+- **Ajoutée le** : 2026-05-28
 
 ### [v2] Modules métier par groupe (barbecue, cartes fidélité…)
 - **Description courte** : Étendre `features` au-delà de SHOPPING/FRIDGE/RECIPES (ex. BARBECUE avec planning invités, sans frigo).
@@ -79,10 +92,87 @@
 
 ## v2 (post-v1)
 
-### [v2] Courses — cocher « dans le caddie » en optimistic UI (zéro latence perçue)
-- **Description courte** : Au tap sur un article, l’UI bascule **immédiatement** (coché / section « fait ») ; la synchro serveur (`POST /purchase` + frigo) se fait en arrière-plan. Rollback + toast si échec.
+> **★ Feature principale v2 (Steve)** : **GPS magasin** — voir `docs/V2-VISION.md` + `docs/V2-RESEARCH-TECH.md`.  
+> Tout le backlog v2 ci-dessous gravite autour de ce chantier ; menus / simplification = support UX.
+
+### [v2] ★ GPS magasin — release unique (tout dans la v2)
+
+**Décision Steve** : pas de sous-releases v2.0 / v2.1 / v2.2 — **une seule v2** avec l’ensemble du GPS magasin.
+
+**Objectif release** : guider l’utilisateur en magasin (liste + route + capteurs + foule), téléphone **en main**, logique **côté app** (BDD minimale : `ShoppingItem` + contributions Waze uniquement).
+
+| Bloc | Livrable | Où |
+|------|----------|-----|
+| CTA | Bouton **« Je suis au magasin »** quand la liste est prête | `shopping.tsx` |
+| Plan 2D | Schéma allées + chemin optimal + point user à l'entrée | `StoreMap2D`, `layouts/`, `react-native-svg` |
+| Rayonnage base | Templates hyper/super/proxi + OSM indoor si dispo | `merge-osm-indoor.ts` |
+| Capteurs | PDR : pas, virages ; point sur le plan ; recalage au cocher | `expo-sensors`, `usePdrSession` |
+| Communauté | Batch à validation : emplacements trouvés, rupture, mauvais pin ; confiance interne | `StoreContributionBatch` + `ContributorTrust` |
+| Recalage | « Je suis ici » sur le plan 2D | `usePdrSession` + brouillon `POSITION_FIX` |
+| Pionnier | Bandeau 1er user sur le magasin + `LAYOUT_FEEDBACK` | `PioneerStoreBanner.tsx` |
+| Pub opt-in fin courses | Vidéo **rewarded** facultative après « Courses terminées » — **aligner revenus sur usage GPS** (éviter perte si croissance) | `showRewardedAd('shopping_complete')` ; cache agrégats contributions ; rate limit batch |
+| **Perf v2** | Optimisation échanges serveur + fluidité client | Cache local (`local-cache/`), snapshot mode magasin, invalidations ciblées TanStack, `useStoreModeQueryPolicy`, rate limits batch contributions |
+
+→ Spec complète : `docs/V2-GPS-IMPLEMENTATION.md`
+
+- **Complexité globale** : 9/10
+- **Valeur estimée** : 🟢 forte (différenciateur produit)
+- **Ajoutée le** : 2026-06-10 · **Scope unifié** : 2026-05-28
+
+### [URGENT] RLS Supabase — tables publiques exposées
+- **Description courte** : Dashboard Supabase CRITICAL : RLS désactivé + colonnes sensibles (`User.email`, `Invite.token`) accessibles via clé anon.
+- **Action** : exécuter `supabase/rls/001_enable_rls.sql` dans SQL Editor — voir `docs/SECURITY-RLS-SUPABASE.md`
+- **Complexité** : 1/10 (5 min)
+- **Valeur estimée** : 🟢 critique (sécurité prod)
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Rapports métriques hebdomadaires — FAIT (script + CI)
+- **Description courte** : Rapport auto chaque lundi : users, actifs, taille BDD, coûts/revenus estimés, alertes.
+- **Usage** : `pnpm metrics:weekly` · workflow `weekly-metrics.yml` · fichiers `reports/metrics/YYYY-MM-DD.md`
+- **Setup CI** : secret GitHub `DIRECT_DATABASE_URL` — voir `docs/METRICS-WEEKLY.md`
+- **Ajoutée le** : 2026-05-28
+
+### [v2.x / v?] Monétisation — pubs obligatoires vs abonnement ~1 € (à arbitrer)
+- **Description courte** : Éviter de perdre de l’argent à la croissance **sans** dégrader l’UX GPS. Options : (A) pubs opt-in seules v2 · (B) interstitiel **obligatoire** à moments limités · (C) **homeshared+** ~0,99–1,99 €/mois sans pub.
+- **Recommandation agent (Steve)** : **v2 = (A) uniquement** (bannière + rewarded fin courses + perf §5.4). Introduire (C) si coûts Fly+Supabase > revenus pubs **3 mois de suite**. (B) seulement si refus abonnement ET besoin cash — jamais pendant navigation 2D.
+- **Moments acceptables si (B)** : après « Courses terminées » (sortie mode magasin), max 1/session, pas en plein rayon.
+- **Abonnement** : Google Play Billing / `expo-iap` ; brique `@tech-bricks/iap` à créer ; commission store ~15 % ; 1 €/mois × 2 % conversion sur 10 k MAU ≈ 170 € net/mois (plus prévisible que pubs).
+- **Complexité** : 6/10 (IAP + paywall + restore achats)
+- **Valeur estimée** : 🟢 forte (viabilité long terme)
+- **Ajoutée le** : 2026-05-28
+
+### [v2] Refonte menus — simplification (support GPS)
+- **Description courte** : Menus / hub allégés ; CTA clair « Mode magasin » / « Mes courses » ; modules secondaires (frigo, recettes…) discrets mais accessibles.
+- **Complexité** : 5/10
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** : refonte navigation ; pas bloquant pour un POC GPS mais requis pour une v2 perçue comme produit courses-first.
+- **Ajoutée le** : 2026-06-10
+
+### [v2] Onboarding intentions — « Pourquoi avez-vous installé l’app ? » (à arbitrer)
+- **Description courte** : Au 1er lancement (post-auth) : choix des usages (courses, frigo, recettes, tâches, partage) ; question dédiée « Lier le frigo ? » oui/non → masque ou active modules ; réactivation dans Profil.
 - **Complexité** : 4/10
-- **Valeur estimée** : 🟢 forte (parcours le plus fréquent en magasin)
+- **Valeur estimée** : 🟢 forte
+- **Notes techniques** : `UserPreferences` / `enabledModules[]` ; sync avec `Group.features[]` ; écran « Reconfigurer mon usage ». Voir `docs/V2-VISION.md` §1.
+- **Ajoutée le** : 2026-06-10
+
+### [v2] Localisation produits — partenariats enseignes (hors scope lancement)
+- **Description courte** : Plans officiels + référentiel produit ↔ emplacement (Carrefour, Leclerc, Auchan…).
+- **Complexité** : 9/10
+- **Valeur estimée** : 🟢 forte (fiabilité + B2B)
+- **Notes techniques** : voie B de `docs/V2-VISION.md` ; APIs souvent fermées — arbitrage business avant dev ; même schéma données que mode Waze pour fusion future.
+- **Ajoutée le** : 2026-06-10
+
+### [v2] Centre de notifications (tâches, messages, activité)
+- **Description courte** : Push + fil in-app : nouvelle tâche, message groupe, changements liste courses partagée, rappels (repas, frigo).
+- **Complexité** : 6/10
+- **Valeur estimée** : 🟢 forte (engagement)
+- **Notes techniques** : Expo Notifications ; préférences par type ; badge ; complète entrées push existantes backlog. `docs/V2-VISION.md` §3.
+- **Ajoutée le** : 2026-06-10
+
+### [v2] Courses — cocher « dans le caddie » en optimistic UI (inclus GPS magasin v2)
+- **Description courte** : Au tap sur un article, l’UI bascule **immédiatement** (coché / section « fait ») ; synchro serveur en arrière-plan. Indispensable en mode magasin.
+- **Complexité** : 4/10
+- **Valeur estimée** : 🟢 forte
 - **Notes techniques** : aujourd’hui `shopping.tsx` attend la mutation puis `invalidateQueries` (shopping + fridge + recipes-match) → latence réseau visible. Pattern TanStack Query `onMutate` + `setQueryData` optimiste ; même logique pour `unpurchase`, `purchase-all` ; conflit realtime (autre membre) = merge ou refresh léger. API inchangée (transaction achat → frigo déjà côté serveur).
 - **Remontée par** : Steve — validé v1 sauf APK ; reporté volontairement en v2.
 - **Ajoutée le** : 2026-06-10

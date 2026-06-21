@@ -6,10 +6,12 @@ import {
   finalizeShoppingSchema,
   ApiError,
 } from '@homeshared/shared';
-import { hasGroupFeature } from '@homeshared/shared';
 import { ensureGroupFeature, ensureMembership } from '../services/group.service.js';
-import { addToFridge } from '../services/fridge.service.js';
 import { enrichShoppingItemsWithAisles } from '../services/shopping-aisle.service.js';
+import {
+  commitPurchasedCartForGroup,
+  commitPurchasedCartToFridge,
+} from '../services/shopping-commit.service.js';
 import { rateLimitRoutes } from '../constants/rate-limits.js';
 
 export const shoppingRoutes: FastifyPluginAsync = async (app) => {
@@ -68,11 +70,11 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(204).send();
   });
 
-  // "Cocher" un item au caddie : marque comme acheté ET incrémente le frigo
+  // Cocher = dans le caddie uniquement (frigo à la finalisation / commit).
   app.post('/:itemId/purchase', async (req) => {
     const { itemId } = req.params as { itemId: string };
     const rawBody = req.body;
-    const input = purchaseShoppingItemSchema.parse(
+    purchaseShoppingItemSchema.parse(
       rawBody === null || rawBody === undefined || rawBody === '' ? {} : rawBody,
     );
     const item = await app.prisma.shoppingItem.findUnique({ where: { id: itemId } });
@@ -80,30 +82,9 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
     if (item.purchasedAt) throw new ApiError('CONFLICT', 'Item déjà marqué comme acheté.');
     await ensureMembership(app.prisma, item.groupId, req.userId!);
 
-    const group = await app.prisma.group.findUnique({
-      where: { id: item.groupId },
-      select: { features: true },
-    });
-
-    const qty = Number(input.purchasedQuantity ?? item.quantity);
-    const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
-
-    return app.prisma.$transaction(async (tx) => {
-      const purchased = await tx.shoppingItem.update({
-        where: { id: itemId },
-        data: { purchasedAt: new Date(), purchasedById: req.userId! },
-      });
-
-      if (hasGroupFeature(group?.features, 'FRIDGE')) {
-        await addToFridge(tx, {
-          groupId: item.groupId,
-          name: item.name,
-          quantity: safeQty,
-          unit: item.unit,
-        });
-      }
-
-      return purchased;
+    return app.prisma.shoppingItem.update({
+      where: { id: itemId },
+      data: { purchasedAt: new Date(), purchasedById: req.userId! },
     });
   });
 
@@ -134,26 +115,12 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
       return { purchased: 0 };
     }
 
-    const group = await app.prisma.group.findUnique({
-      where: { id: groupId },
-      select: { features: true },
-    });
-    const hasFridge = hasGroupFeature(group?.features, 'FRIDGE');
-
     await app.prisma.$transaction(async (tx) => {
       for (const item of pending) {
         await tx.shoppingItem.update({
           where: { id: item.id },
           data: { purchasedAt: new Date(), purchasedById: req.userId! },
         });
-        if (hasFridge) {
-          await addToFridge(tx, {
-            groupId,
-            name: item.name,
-            quantity: Number(item.quantity),
-            unit: item.unit,
-          });
-        }
       }
     });
 
@@ -161,7 +128,18 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
   });
 
   /**
-   * Finalise les courses après paiement : supprime les articles du caddie.
+   * Transfère le caddie (articles cochés) vers le frigo et les retire de la liste.
+   * Les articles non cochés restent sur la liste.
+   */
+  app.post('/:groupId/commit-cart', { config: rateLimitRoutes.write }, async (req) => {
+    const { groupId } = req.params as { groupId: string };
+    await ensureMembership(app.prisma, groupId, req.userId!);
+    await ensureGroupFeature(app.prisma, groupId, 'SHOPPING');
+    return commitPurchasedCartForGroup(app.prisma, groupId);
+  });
+
+  /**
+   * Finalise les courses après paiement : frigo + suppression des articles cochés.
    * Les articles non cochés restent sauf si discardUnpurchased=true.
    */
   app.post('/:groupId/finalize', async (req) => {
@@ -189,9 +167,13 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const result = await app.prisma.$transaction(async (tx) => {
-      const deletedPurchased = await tx.shoppingItem.deleteMany({
-        where: { groupId, purchasedAt: { not: null } },
+      const group = await tx.group.findUnique({
+        where: { id: groupId },
+        select: { features: true },
       });
+
+      const commit = await commitPurchasedCartToFridge(tx, groupId, group?.features);
+
       let deletedUnpurchased = 0;
       if (input.discardUnpurchased) {
         const r = await tx.shoppingItem.deleteMany({
@@ -199,7 +181,12 @@ export const shoppingRoutes: FastifyPluginAsync = async (app) => {
         });
         deletedUnpurchased = r.count;
       }
-      return { cleared: deletedPurchased.count + deletedUnpurchased, remaining: unpurchased - deletedUnpurchased };
+
+      return {
+        cleared: commit.committed + deletedUnpurchased,
+        remaining: input.discardUnpurchased ? 0 : commit.remaining,
+        committedToFridge: commit.committed,
+      };
     });
 
     return result;

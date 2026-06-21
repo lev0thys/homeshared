@@ -107,6 +107,10 @@ export default function GroupTabsLayout() {
           options={{ href: null, title: t('mealPermissions.title') }}
         />
         <Tabs.Screen name="profile" options={{ href: null }} />
+        <Tabs.Screen
+          name="store-mode"
+          options={{ href: null, title: t('storeMode.title') }}
+        />
       </Tabs>
 
       {groupId && showChat ? (

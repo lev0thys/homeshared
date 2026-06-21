@@ -56,6 +56,8 @@ module.exports = ({ config }) => {
       EXPO_PUBLIC_ADS_CONSENT: process.env.EXPO_PUBLIC_ADS_CONSENT,
       EXPO_PUBLIC_SITE_URL: process.env.EXPO_PUBLIC_SITE_URL,
       EXPO_PUBLIC_PLAY_STORE_URL: process.env.EXPO_PUBLIC_PLAY_STORE_URL,
+      EXPO_PUBLIC_APP_STORE_ID: process.env.EXPO_PUBLIC_APP_STORE_ID,
+      EXPO_PUBLIC_STORE_MODE_DEV: process.env.EXPO_PUBLIC_STORE_MODE_DEV,
       EXPO_PUBLIC_APK_URL: process.env.EXPO_PUBLIC_APK_URL,
     },
   };

@@ -1,0 +1,59 @@
+# Rapport métriques hebdomadaire — utilisateurs, coûts estimés, santé API.
+# Secret requis : DIRECT_DATABASE_URL (Supabase direct, port 5432).
+
+name: Weekly metrics report
+
+on:
+  schedule:
+    # Lundi 07:00 UTC
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @homeshared/api prisma:generate
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public
+
+      - name: Run weekly metrics report
+        env:
+          DIRECT_DATABASE_URL: ${{ secrets.DIRECT_DATABASE_URL }}
+          METRICS_API_URL: https://homeshared-api.fly.dev
+        run: pnpm --filter @homeshared/api run metrics:weekly
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-metrics-report
+          path: reports/metrics/*.md
+          retention-days: 90
+
+      - name: Commit report to dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/metrics/
+          git diff --staged --quiet && echo "Aucun changement à committer." && exit 0
+          git commit -m "chore(metrics): rapport hebdomadaire $(date -u +%Y-%m-%d)"
+          git push origin dev

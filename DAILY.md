@@ -2,13 +2,168 @@
 
 ## 📌 État actuel
 
-- **API prod** : https://homeshared-api.fly.dev — OK (**rate limit déployé** via `fly deploy`)
-- **Web Vercel** : https://homeshared.vercel.app — **OK** (fix React dupliqué + redeploy prod)
-- **Google OAuth** : OK (Supabase + Google Cloud configurés)
-- **EAS APK** : **OK** build `34877760` — [APK direct](https://expo.dev/artifacts/eas/7udEVm79nmJ2hjmFdcj16z.apk) · `/download.apk` sur Vercel
-- **Doc état** : `export/DEPLOIEMENT-ETAT.md`
-- **Validation Steve (2026-06-10)** : parcours v1 OK (hors APK à tester) — seul point UX reporté v2 : latence cocher article courses
-- **Prochaine étape** : clôture v1 (tag) ou atelier plan v2 ; test APK device
+- **API prod** : https://homeshared-api.fly.dev — OK
+- **Web Vercel** : https://homeshared.vercel.app — OK
+- **Branche** : `dev` — mode magasin v2 (non commité)
+- **Prochaine étape** : test device réel, commit lot v2, `fly deploy` contributions
+- **Dernier travail** : fix carte plein slot (ratio viewport), polish carto, tests viewport
+
+---
+
+## 2026-05-28 (reprise) — Carte : fix affichage + polish
+
+### Fait
+- [x] **`fitViewBoxToViewport`** — la carte remplit 100 % du slot (plus de plan miniature centré avec bandes vides)
+- [x] **`preserveAspectRatio="none"`** + viewBox ajusté au ratio écran
+- [x] **Bouton ◎** aussi dans la barre d’outils + flottant
+- [x] **Échelle dynamique** 1 m / 5 m selon zoom ; îlots allée plus transparents
+- [x] **`store-map-viewport.test.ts`** — 3 tests
+- [x] `pnpm verify` vert
+
+### À tester
+- [ ] Web mode magasin : carte remplit la zone grise, centrage ◎, zoom %
+- [ ] Changer hyper → super → proxi via fiche `!` magasin inconnu
+
+---
+
+## 2026-05-28 (suite 6) — Maps GPS auto + polish testable
+
+### Fait
+- [x] **`inferLayoutProfileDetailed`** — enseignes FR (Leclerc, Carrefour Market/City, Lidl, Monoprix, Super U…) + confiance high/medium/low
+- [x] **`layout-profile-meta.ts`** — libellés FR, emoji, description par type hyper/super/proxi
+- [x] **`StoreLayoutPreview`** — miniatures plan dans le picker magasin
+- [x] **`StoreLayoutSwitcher`** — changer le plan en cours de session (mémorisé par `storeOsmId`)
+- [x] **`resolve-store-layout.ts`** — fusion détection OSM + override utilisateur en cache
+- [x] **Auto-pick GPS** — magasin le plus proche si ≤ 80 m ou nettement plus proche que le 2e (≤ 150 m)
+- [x] **`StoreMap2D`** — badge type magasin + pins orange contributions communautaires
+- [x] **store-mode** — « Changer de magasin », coords GPS entrée, toast contributions envoyées
+- [x] `pnpm verify` vert (11 tests store-navigation)
+
+### À tester (Steve)
+- [ ] Expo Go / web : « Je suis au magasin » → liste POI avec aperçu plan + type suggéré
+- [ ] Vérifier switch hyper ↔ super ↔ proxi recalcule la route
+- [ ] Long-press recalage + cocher articles → fin courses → alerte contributions
+- [ ] Rebuild APK si permission GPS native pas encore dans le build actuel
+
+---
+
+## 2026-05-28 (suite 5) — Bloc 6 perf v2
+
+### Fait
+- [x] **`lib/local-cache/`** — TTL AsyncStorage + clés contributions / overpass / layout
+- [x] **`useCachedQuery`** — contributions 15 min sans refetch systématique
+- [x] **`store-mode.store`** — snapshot liste courses à l'entrée mode magasin
+- [x] **`useOptimisticPurchase`** — mode magasin : 0 invalidation ; liste classique : fridge/recipes **debounce 2 s**
+- [x] **`useGroupRealtime`** — pause invalidations pendant mode magasin
+- [x] API `GET /contributions` → header `Cache-Control: max-age=600`
+- [x] `pnpm verify` vert
+
+### Prochaine étape v2
+- [ ] Pub rewarded opt-in fin courses
+- [ ] `fly deploy` API contributions prod
+- [ ] Test device hyper réel
+
+### Décision Steve (2026-05-28)
+- **Compte Apple Developer 1 an** — anticipation uniquement ; **fiches Play / App Store plus tard**, quand la version sera bien affinée (pas maintenant).
+
+---
+
+### Fait
+- [x] **`expo-location`** + permission foreground (`app.json` plugin)
+- [x] **Overpass mobile** — `fetchNearbyStoresFromOverpass` (cache 24 h, rayon 500 m)
+- [x] **`inferLayoutProfileFromOsmTags`** dans `@homeshared/store-navigation` + tests
+- [x] **`StorePickerSheet`** — liste POI, dernier magasin, fallback plan hyper/super/proxi
+- [x] **`useStartStoreMode`** — auto-pick si 1 magasin ≤ 80 m, sinon sheet
+- [x] **`beginSession`** — persiste `storeOsmId`, nom, layout, `entryLat/Lng`
+- [x] Mode magasin affiche le nom du magasin + plan suggéré
+- [x] **69 tests** verify vert
+
+### Prochaine étape v2
+- [ ] Cache local perf (`useStoreModeQueryPolicy`)
+- [ ] Pub rewarded fin courses
+- [ ] `fly deploy` API (contributions prod)
+- [ ] Test device réel en hyper (GPS + Overpass)
+
+### Note
+- **Rebuild EAS/APK** requis pour la permission localisation native (plugin `expo-location`).
+
+---
+
+### Fait
+- [x] **4× `pnpm verify` vert** — 60 tests API + 5 store-navigation + typecheck 4 packages
+- [x] Script **`scripts/verify-local.mjs`** — contourne symlinks `node_modules` Windows cassés
+- [x] **Bugfix** : dépendances `usePdrSession` / recalage rayon (évite re-render loop)
+- [x] **`advanceAlongPolyline`** extrait dans `@homeshared/store-navigation` + 3 tests PDR
+- [x] **`productFingerprint`** déplacé dans `@homeshared/shared` + 2 tests
+- [x] **6 tests** `store-contributions.service` (agrégats, pioneer, submit mock)
+- [x] **RLS v2** : scripts `002_v2_contributions_rls.sql` + `003_auth_initplan.sql` appliqués (`pnpm rls:apply` OK)
+
+### Commande locale fiable
+```powershell
+pnpm verify
+# ou : node scripts/verify-local.mjs
+```
+
+### Prochaine étape v2
+- [ ] Géoloc Overpass + déployer API Fly (contributions prod)
+- [ ] Cache local perf + pub rewarded
+
+---
+
+### Fait
+- [x] **Prisma** : `StoreContributionBatch`, `StoreContributionEvent`, `ContributorTrust` — `db push` OK sur Supabase
+- [x] **API** : `GET /api/stores/contributions`, `POST /api/stores/contributions/batch` + service agrégation + cache TTL + `ContributorTrust`
+- [x] **`usePdrSession`** — podomètre accéléromètre (`expo-sensors`), déplacement le long du polyline
+- [x] **`useContributionDraft`** — brouillon local FOUND / POSITION_FIX / OUT_OF_STOCK / LAYOUT_FEEDBACK → envoi batch à « Courses terminées »
+- [x] **`useStoreSession`** — magasin + profil layout en AsyncStorage (`storeOsmId` défaut `0`)
+- [x] **`PioneerStoreBanner`** — bandeau pionnier + badge communauté
+- [x] **Plan 2D** : long-press « Je suis ici », signalement rupture 🚫 par article
+- [x] i18n FR/EN étendu `storeMode.*`
+
+### En cours (v2 restant)
+- [ ] Géoloc magasin (Overpass mobile + choix POI)
+- [ ] Cache local / `useStoreModeQueryPolicy` (perf §5.4)
+- [ ] Pub rewarded opt-in fin courses
+- [ ] Rapports métriques CI : secret `DIRECT_DATABASE_URL` sur GitHub
+
+### Bloqueurs
+- ~~Alertes CRITICAL RLS sur tables v2~~ → **`pnpm rls:apply`** ré-exécuté (002 + 003) le 2026-05-28
+- Vérifier dashboard Supabase Security après refresh (4 CRITICAL + 5 WARN initplan attendus résolus)
+
+---
+
+## 2026-05-28 (suite) — RLS Supabase + fondation v2 mode magasin
+
+### Fait
+- [x] **RLS Supabase appliqué** — `pnpm rls:apply` → script `supabase/rls/001_enable_rls.sql` exécuté sur la base prod/dev
+- [x] Package **`@homeshared/store-navigation`** : layouts hyper/super/proxi, `buildStoreRoute`, tests vitest
+- [x] **`useOptimisticPurchase`** — cocher instantané (liste courses + mode magasin)
+- [x] **Mode magasin v2 (MVP)** : CTA « Je suis au magasin », écran `store-mode.tsx`, plan 2D SVG (`StoreMap2D`), parcours par rayons
+- [x] i18n FR/EN `storeMode.*`
+
+### Bloqueurs
+- Vérifier dashboard Supabase Security → alertes CRITICAL disparues après RLS
+
+---
+
+## 2026-05-28 (jeudi) — Spec technique GPS magasin
+
+### Fait
+- [x] **ADR-006** — navigation hybride rayons + PDR + crowdsourcing (`docs/adr/006-navigation-magasin-hybride.md`)
+- [x] **Plan d'implémentation** détaillé : package `@homeshared/store-navigation`, écrans `store-mode/`, modèle Prisma `Store` / `ShoppingTrip` / `AisleContribution`, endpoints, phases v2.0→v2.3 (`docs/V2-GPS-IMPLEMENTATION.md`)
+- [x] `BACKLOG.md` — lien vers la spec sur la phase v2.0
+
+### Décisions
+- [x] **Tout dans la v2** — pas de sous-releases v2.0/v2.1 ; client-first, BDD minimale (contributions Waze seule migration notable)
+- [x] **UX** : plan 2D + batch contributions à validation + recalage manuel + signalements rupture/mauvais emplacement + score confiance interne
+- [x] **Perf v2** : cache local, snapshot mode magasin, invalidations ciblées, anti-spam API (spec §5.4)
+
+### Fait (2026-05-28 suite)
+- [x] **Rapports métriques hebdo** : `apps/api/scripts/weekly-metrics.ts`, `pnpm metrics:weekly`, workflow `weekly-metrics.yml` (lundis), `docs/METRICS-WEEKLY.md`
+
+### En cours
+- [ ] **v2 GPS magasin** : fondation → magasin → capteurs → Waze (ordre dev interne)
+- [ ] **CI métriques** : configurer secret GitHub `DIRECT_DATABASE_URL` pour rapports auto
 
 ---
 

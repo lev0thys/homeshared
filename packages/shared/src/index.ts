@@ -6,3 +6,7 @@ export * from './app-modules.js';
 export * from './user-capabilities.js';
 export * from './meal-portions.js';
 export * from './shopping-aisles.js';
+export * from './product-fingerprint.js';
+export * from './invite-links.js';
+export * from './store-gps-readiness.js';
+export * from './shopping-trip.js';

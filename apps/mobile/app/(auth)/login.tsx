@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
+import { redirectAfterAuth } from '@/lib/post-auth-redirect';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '@/components/Screen';
 import { Input } from '@/components/Input';
@@ -28,7 +29,7 @@ export default function LoginScreen() {
       setError(formatAuthError(err));
       return;
     }
-    router.replace('/(app)');
+    await redirectAfterAuth();
   }
 
   return (

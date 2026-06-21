@@ -5,13 +5,19 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/((?!_expo|assets|manifest.webmanifest|sw.js|favicon.ico|favicon.png|download.apk|icons).*)",
+      "source": "/((?!_expo|assets|manifest.webmanifest|sw.js|favicon.ico|favicon.png|download.apk|icons|\\.well-known).*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/sw.js",
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    },
+    {
+      "source": "/.well-known/assetlinks.json",
+      "headers": [{ "key": "Content-Type", "value": "application/json" }]
+    },
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
     },
     {

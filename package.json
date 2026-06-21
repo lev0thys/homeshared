@@ -33,8 +33,12 @@
     "deploy:vercel-env": "powershell -ExecutionPolicy Bypass -File scripts/deploy-vercel-env.ps1",
     "deploy:web": "pnpm build:web",
     "export:publication": "powershell -ExecutionPolicy Bypass -File scripts/export-publication.ps1",
-    "verify": "pnpm typecheck && pnpm --filter @homeshared/api test",
-    "verify:full": "pnpm verify && pnpm test:features"
+    "verify": "node scripts/verify-local.mjs",
+    "verify:legacy": "pnpm typecheck && pnpm test:store-navigation && pnpm --filter @homeshared/api test",
+    "verify:full": "pnpm verify && pnpm test:features",
+    "metrics:weekly": "pnpm --filter @homeshared/api run metrics:weekly",
+    "rls:apply": "node scripts/apply-supabase-rls.mjs",
+    "test:store-navigation": "pnpm --filter @homeshared/store-navigation test"
   },
   "devDependencies": {
     "@types/node": "^22.7.0",
