@@ -1,5 +1,7 @@
 # homeshared
 
+**Version courante** : 1.1.0 (`release/v1.1`) — v1.0 figée sur `release/v1.0`.
+
 ## Scope
 
 Application multi-plateforme (Android + iOS natifs + Web PWA) permettant à des

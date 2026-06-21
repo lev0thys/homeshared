@@ -4,6 +4,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), SemVer.
 
 ## [Unreleased]
 
+_Expérimentations UI / navigation — voir branche `experiment/ui`._
+
+## [1.1.0] - 2026-06-21
+
+Version stable V2 avant refonte graphique. Tag : `v1.1.0`, branche de secours : `release/v1.1`.
+
 ### v2 — Carte magasin (polish)
 - **Carte plein slot** : `fitViewBoxToViewport` — plus de bandes vides / plan miniature sur web.
 - **Rendu carto** : couloirs crème, gondoles au mètre, îlots allée transparents, échelle 1 m / 5 m.
@@ -175,3 +181,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), SemVer.
 - Briques tech-bricks créées :
   - `@tech-bricks/auth-supabase` v0.1.0
   - `@tech-bricks/ads` v0.1.0 (stub)
+
+## [1.0.0] - 2026-06-10
+
+Première version produit validée (courses, frigo, recettes, planning, tâches, déploiement web + APK).
+Tag : `v1.0.0`, branche figée : `release/v1.0` (commit `ad535c5`).

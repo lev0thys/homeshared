@@ -2,11 +2,28 @@
 
 ## 📌 État actuel
 
+- **Version** : 1.1.0 (tag `v1.1.0`) — v1.0 conservée (`release/v1.0`, tag `v1.0.0`)
 - **API prod** : https://homeshared-api.fly.dev — OK
 - **Web Vercel** : https://homeshared.vercel.app — OK
-- **Branche** : `dev` — mode magasin v2 (non commité)
-- **Prochaine étape** : test device réel, commit lot v2, `fly deploy` contributions
-- **Dernier travail** : fix carte plein slot (ratio viewport), polish carto, tests viewport
+- **Branche** : `dev` = `release/v1.1` ; refonte UI sur `experiment/ui`
+- **Prochaine étape** : prototypes graphiques (`experiment/ui-a`, `ui-b`, …) — voir `docs/UI-EXPERIMENTS.md`
+- **Dernier travail** : tags v1.0/v1.1, branches release + experiment, bump semver packages
+
+---
+
+## 2026-06-21 — Release v1.1 + structure expérimentations UI
+
+### Fait
+- [x] Tag **`v1.0.0`** sur `ad535c5` (v1 validée) + branche **`release/v1.0`**
+- [x] Tag **`v1.1.0`** sur HEAD (V2 mode magasin, invites, caddie/frigo) + branche **`release/v1.1`**
+- [x] Branches **`commit`** et **`main`** alignées sur v1.1
+- [x] Branche **`experiment/ui`** pour refonte visuelle / navigation
+- [x] Bump semver `1.1.0` (root, api, mobile, shared, store-navigation)
+- [x] Doc **`docs/UI-EXPERIMENTS.md`**
+
+### Prochaine session
+- [ ] Créer `experiment/ui-a` (première direction graphique)
+- [ ] `fly deploy` API si besoin (contributions + commit-cart)
 
 ---
 
