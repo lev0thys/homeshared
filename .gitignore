@@ -35,6 +35,8 @@ prisma/migrations/dev.db*
 .eas-archive-test/
 .eas-log*.txt
 .eas-log*.bin
+scripts/.eas-loop-state.json
+scripts/.eas-loop-logs/
 .eas-build.json
 ios/
 android/
@@ -50,6 +52,10 @@ GoogleService-Info.plist
 play-store/service-account.json
 play-store/*.json
 !play-store/README.md
+*.aab
+
+# Fichiers temporaires EAS / debug local
+.tmp-*
 
 # APK binaire (trop lourd pour git — hébergé sur Vercel)
 apps/mobile/public/download.apk

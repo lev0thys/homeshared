@@ -36,6 +36,8 @@
     "verify": "node scripts/verify-local.mjs",
     "verify:legacy": "pnpm typecheck && pnpm test:store-navigation && pnpm --filter @homeshared/api test",
     "verify:full": "pnpm verify && pnpm test:features",
+    "eas:monitor": "node scripts/monitor-eas-build.mjs --watch",
+    "eas:build:loop": "node scripts/eas-build-loop.mjs --profile production --platform android --max-attempts 6",
     "metrics:weekly": "pnpm --filter @homeshared/api run metrics:weekly",
     "rls:apply": "node scripts/apply-supabase-rls.mjs",
     "test:store-navigation": "pnpm --filter @homeshared/store-navigation test"

@@ -5,3 +5,12 @@
 expo-env.d.ts
 # @end expo-cli
 .vercel
+.env*
+
+# Signature release Android (EAS keystore local)
+*.jks
+*.keystore
+credentials/*
+!credentials/keystore.properties.example
+android/keystore.properties
+@lev0thy__homeshared*

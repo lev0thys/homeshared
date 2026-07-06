@@ -1,17 +1,18 @@
 # Play Store — assets & déploiement
 
-Dossier pour préparer la publication (non bloquant pour tester AdMob en APK).
+## Fichiers prêts (2026-07-04)
 
-## À ajouter avant soumission Play Console
+| Fichier | Format | Statut |
+|---------|--------|--------|
+| `icon-512.png` | 512×512 | ✅ |
+| `feature-graphic.png` | 1024×500 | ✅ |
+| `screenshots/` (4 captures) | 1080×1920 | ⚠️ **Vraies captures app** — voir `CAPTURES-ECRAN.md` |
+| `descriptions/fr.txt` + `en.txt` | textes fiche | ✅ |
+| `release-notes/fr.txt` + `en.txt` | notes version | ✅ |
+| `COPY-PASTE-PLAY-CONSOLE.md` | copier-coller rapide | ✅ |
+| `PUBLICATION-PRODUCTION.md` | guide production | ✅ |
 
-| Fichier / contenu | Format |
-|-------------------|--------|
-| `icon-512.png` | 512×512 |
-| `feature-graphic.png` | 1024×500 |
-| `screenshots/` | téléphone, min. 2 captures |
-| `descriptions/fr.txt` | titre court + description longue |
-| `descriptions/en.txt` | idem EN |
-| Lien **privacy policy** | URL publique : `/privacy` sur le site PWA déployé (ex. `https://homeshared.vercel.app/privacy`) |
+Regénérer : `node play-store/scripts/generate-play-assets.mjs`
 
 ## Soumission automatisée (optionnel)
 

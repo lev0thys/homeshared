@@ -1,0 +1,67 @@
+# Build Android AAB en local sur GitHub Actions — ne consomme PAS le quota EAS cloud.
+name: EAS Build Android (local)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: eas-android-local
+  cancel-in-progress: false
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: apps/mobile
+    env:
+      EXPO_NO_ANDROID_WIDGETS: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: .
+
+      - name: Prebuild Android
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Patch Gradle for monorepo embed
+        run: |
+          GRADLE=android/app/build.gradle
+          if ! grep -q 'extraPackagerArgs.*apps/mobile/index.js' "$GRADLE"; then
+            sed -i '/entryFile = file/a\    extraPackagerArgs = ["--entry-file", "apps/mobile/index.js"]' "$GRADLE" || true
+          fi
+          if ! grep -q 'root = file("../../")' "$GRADLE"; then
+            sed -i '/react {/a\    root = file("../../")' "$GRADLE" || true
+          fi
+          sed -i 's/newArchEnabled=true/newArchEnabled=false/' android/gradle.properties || true
+          sed -i 's/android.minSdkVersion=23/android.minSdkVersion=24/' android/gradle.properties || true
+
+      - name: Build AAB (Gradle — no EAS quota)
+        run: |
+          cd android
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: homeshared-production-aab
+          path: apps/mobile/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

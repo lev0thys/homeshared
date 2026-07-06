@@ -2,12 +2,183 @@
 
 ## 📌 État actuel
 
-- **Version** : 1.1.0 (tag `v1.1.0`) — v1.0 conservée (`release/v1.0`, tag `v1.0.0`)
-- **API prod** : https://homeshared-api.fly.dev — OK
-- **Web Vercel** : https://homeshared.vercel.app — OK
-- **Branche** : `dev` = `release/v1.1` ; refonte UI sur `experiment/ui`
-- **Prochaine étape** : prototypes graphiques (`experiment/ui-a`, `ui-b`, …) — voir `docs/UI-EXPERIMENTS.md`
-- **Dernier travail** : tags v1.0/v1.1, branches release + experiment, bump semver packages
+- **Version** : 1.1.0 — Expo **SDK 53**, target **API 35**
+- **Android AAB local** : ✅ compilé (`apps/mobile/build.aab`, ~40 Mo) — signature **debug** (Play → keystore EAS requis)
+- **EAS cloud Android** : quota Free épuisé (reset ~1er août 2026)
+- **iOS EAS** : credentials Apple **non configurés** (1× interactif requis)
+- **Prochaine étape Steve** : `scripts/setup-android-release-signing.ps1` puis re-sign / `scripts/build-ios-eas.ps1`
+
+---
+
+## 2026-07-05 (suite) — Builds locaux Android OK
+
+### Fait
+- [x] SDK Android 35 installé (`scripts/setup-android-sdk.ps1`)
+- [x] Build Gradle `bundleRelease` Windows — API 35, SDK 53, widgets prod off
+- [x] Fix monorepo Metro/Gradle : `extraPackagerArgs` entry `apps/mobile/index.js`, plugin `withMonorepoAndroidGradle.js`
+- [x] AAB : `apps/mobile/build.aab` + `play-store/homeshared-production-api35.aab`
+- [x] Workflow GHA `eas-build-android-local.yml` (Gradle Linux, sans quota)
+- [x] Scripts : `build-android-aab-local.ps1`, `build-ios-eas.ps1`, `setup-android-release-signing.ps1`
+
+### Bloqueurs
+- [ ] AAB signé **debug** — Play exige keystore EAS (download via `eas credentials`)
+- [ ] iOS : `eas build -p ios` en mode **interactif** (certificats + widget extension)
+
+---
+
+## 2026-07-05 — Boucle EAS automatisée + SDK 53
+
+### Fait
+- [x] `scripts/eas-build-loop.mjs` — build → surveille → diagnostique → fix → retry
+- [x] `scripts/eas-build-diagnose.mjs` + `scripts/eas-build-fixes.mjs`
+- [x] `pnpm eas:build:loop` dans package.json racine
+- [x] Upgrade auto Expo 51 → 52 → 53 (deps alignées)
+- [x] Fix `match.tsx` (import cassé → bundle JS OK local)
+- [x] `app.config.js` : SDK 53 → API 35 native + Kotlin 2.0.21
+- [x] Règle 96-play-store-playbook : surveillance obligatoire
+
+### Bloqueur
+- [ ] **Quota EAS Free** Android atteint — plus de builds ce mois
+
+---
+
+## 2026-07-02 — Scope v1 complet + rebuild widgets
+
+### Fait
+- [x] Scope v1 : widgets, App Store iOS, OAuth, E2E intégrés (`PROJECT.md`, `BACKLOG.md`)
+- [x] Widget Android : pin `react-native-android-widget@0.14.2` (compatible Expo 51)
+- [x] `eas.json` : profils iOS preview/production ; widgets réactivés (plus `EXPO_NO_ANDROID_WIDGETS`)
+- [x] `docs/APP-STORE-IOS.md`, E2E §8–10, `STEVE-TODO` étapes 13–15
+- [x] `app.config.js` : `ios.appleTeamId` via `EXPO_APPLE_TEAM_ID`
+- [x] EAS build preview Android **avec widgets** lancé : `13192030-846c-4d86-a24f-7c6b8bb7cae8`
+
+### Steve (reste)
+- [ ] OAuth : Supabase provider Google + Google Cloud client (code déjà livré)
+- [ ] `EXPO_APPLE_TEAM_ID` pour build iOS
+- [ ] E2E checklist 2 comptes
+- [ ] Play + App Store publication
+
+---
+
+## 2026-06-29 — Préparation publication (agent)
+
+### Fait
+- [x] `pnpm prisma:db-push` + `prisma:seed` OK
+- [x] `pnpm rls:apply` (001, 002, 003)
+- [x] `pnpm verify` vert — fix `match.tsx` (GroupNutritionSummary), test `shopping-commit` (mock ingredient)
+- [x] `fly deploy` + `deploy:fly-secrets` — API prod à jour
+- [x] EAS : `EXPO_PUBLIC_ADMOB_REWARDED_ID` ajouté (preview + production)
+- [x] `pnpm build:web` export OK
+- [x] `export/CHECKLIST-LANCEMENT.md` mis à jour
+
+### Steve (reste)
+- [ ] Realtime 5 tables + OAuth redirects Supabase
+- [ ] `eas build --profile preview --platform android`
+- [ ] E2E `docs/E2E-CHECKLIST.md`
+- [ ] Play Console tests internes + captures
+- [ ] Redéployer Vercel si besoin (dashboard)
+
+---
+
+## 2026-05-28 — Stabilisation complète (typecheck + dev)
+
+### Fait
+- [x] `pnpm dev:stop` + `pnpm install` + `prisma generate` OK
+- [x] **Mobile `typecheck` vert** (0 erreur) — meal-plan, match, widgets, hooks, tests
+- [x] **API `typecheck` vert**
+- [x] Tests mobile (14) + shared nutrition/notifications (13) verts
+- [x] `useMutationError.captureError` helper + `onError` mutations corrigés
+- [x] Dev relancé : API `:3001` + Metro `:8081`
+
+---
+
+### Fait
+- [x] `@homeshared/shared` : `notification-preferences.ts` + tests (master, tâches, repas hebdo, frigo/courses v2)
+- [x] Prisma `User.notificationPrefs` + API `PATCH/GET /api/users/me`
+- [x] API `GET /api/tasks/me/reminders` — sync rappels tâches claim/assignées
+- [x] Mobile : `expo-notifications` + `expo-device`, scheduler local, bootstrap `_layout.tsx`
+- [x] Profil : section « Notifications » (`NotificationSettingsEditor`)
+- [x] Tâches : invalidation sync après claim/complete/schedule
+- [x] i18n FR/EN `notifications.*`
+
+### Steve
+- [x] `pnpm prisma:db-push` (colonne `notificationPrefs`) — fait en audit
+- [ ] Redémarrer dev : `pnpm dev:stop` puis `dev:api` + `dev:mobile`
+- [ ] Rebuild dev client Android si besoin — plugin notifications
+- [ ] Tester sur téléphone réel
+
+---
+
+## 2026-05-28 — Audit qualité & stabilité
+
+### Fait
+- [x] Notifications : stubs `.web.ts` / `.native.ts` — web ne crash plus
+- [x] TS API vert (`typecheck`) : snapshots, seed, nutrition, archives
+- [x] TS shared : `ingredient-macros.ts`, emojis fallback
+- [x] `DriveImportWebViewModal.tsx` shim, warning Expo AdMob nettoyé
+- [x] Hub favoris ★/☆
+
+### Bloqueur
+- `prisma generate` EPERM tant que l’API dev tourne → redémarrer après `dev:stop`
+
+---
+
+## 2026-05-28 — Nutrition profil & recettes
+
+### Fait
+- [x] Schéma Prisma : `User` (heightCm, weightKg, birthYear, sex, activityLevel, nutritionGoal, nutritionConsentAt) + `Recipe.nutritionPerServing`
+- [x] `@homeshared/shared` : BMR/TDEE Mifflin-St Jeor, estimation nutrition ingrédients (CIQUAL), tests
+- [x] API : `PATCH /api/users/me` nutrition, `GET /api/groups/:id/nutrition-summary`, kcal dans match + détail recette
+- [x] Seed : calcul automatique `nutritionPerServing` pour tout le catalogue
+- [x] Mobile : section Nutrition profil, badge kcal recettes, panneau macros, bannière besoins foyer
+- [x] Portions match : initialisation depuis membres du groupe (adultes + enfants × 0,65)
+
+### Steve
+- [ ] `pnpm prisma:db-push` + `pnpm prisma:seed`
+
+---
+
+## 2026-05-28 — Widgets iOS (WidgetKit)
+
+### Fait
+- [x] `@bacons/apple-targets@0.2.1` + App Group `group.com.steve.homeshared`
+- [x] Extension Swift `targets/homeshared-widgets/` (Courses + Frigo)
+- [x] Bridge iOS `widget-ios-bridge.ts` — miroir JSON vers App Group
+- [x] `useWidgetBridge` étendu à iOS
+- [x] Doc unifiée `docs/widgets.md`
+
+### En cours / Steve
+- [ ] EAS build iOS (`eas build --platform ios`) — nécessite Mac cloud EAS + compte Apple Developer
+- [ ] Activer App Group sur Apple Developer Portal si EAS le demande
+
+---
+
+## 2026-05-28 — Widgets Android (Courses + Frigo)
+
+### Fait
+- [x] Dépendance `react-native-android-widget@0.16.1` + plugin Expo (`app.config.js`)
+- [x] Point d'entrée `index.js` + task handler headless
+- [x] Bridge : `src/widgets/` (storage, API, sync, snapshots)
+- [x] Widgets `HomesharedShopping` + `HomesharedFridge` (interactifs)
+- [x] Hook `useWidgetBridge` sur layout groupe
+- [x] Doc `docs/android-widgets.md` + tests snapshot
+
+### En cours / Steve
+- [ ] `pnpm install` (si lockfile OK) puis `eas build --profile development --platform android`
+- [ ] Ajouter widgets sur écran d'accueil et valider cocher / +− / deep links
+
+---
+
+## 2026-05-28 — Semaines de repas enregistrées
+
+### Fait
+- [x] Modèles Prisma `MealPlanWeekSnapshot` + `MealPlanSnapshotEntry`
+- [x] API : liste (mois / favoris), création, favori, suppression, réapplication + courses
+- [x] UI : panneau « Semaines enregistrées » sur `recipes/meal-plan.tsx`
+- [x] i18n FR + EN (section snapshots)
+
+### En cours / Steve
+- [ ] `pnpm prisma:db-push` puis redeploy API Fly
 
 ---
 
